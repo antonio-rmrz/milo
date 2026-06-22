@@ -1,0 +1,115 @@
+/*
+ * Gallery Block
+ * Uses Milo design tokens (CSS custom properties) for colors and spacing.
+ * Dark mode is handled automatically via token values.
+ */
+
+.gallery {
+  --gallery-columns: 3;
+  --gallery-gap: var(--spacing-m, 16px);
+  --gallery-border-radius: var(--shape-border-radius-m, 8px);
+  --gallery-overlay-bg: rgba(0 0 0 / 50%);
+  --gallery-caption-color: var(--color-white, #fff);
+  --gallery-bg: var(--color-gray-100, #f8f8f8);
+}
+
+.gallery .gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--gallery-columns), 1fr);
+  gap: var(--gallery-gap);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gallery .gallery-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--gallery-border-radius);
+  background-color: var(--gallery-bg);
+  outline: none;
+}
+
+.gallery .gallery-item:focus-visible {
+  outline: 2px solid var(--color-accent, #1473e6);
+  outline-offset: 2px;
+}
+
+.gallery .gallery-figure {
+  margin: 0;
+  padding: 0;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.gallery .gallery-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: var(--gallery-border-radius);
+  transition: transform 0.2s ease;
+}
+
+.gallery .gallery-item:hover .gallery-figure img,
+.gallery .gallery-item:focus-visible .gallery-figure img {
+  transform: scale(1.04);
+}
+
+.gallery .gallery-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--spacing-xs, 8px) var(--spacing-s, 12px);
+  background: var(--gallery-overlay-bg);
+  color: var(--gallery-caption-color);
+  font-size: var(--type-body-xs-size, 12px);
+  line-height: var(--type-body-xs-lh, 1.4);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 0 0 var(--gallery-border-radius) var(--gallery-border-radius);
+}
+
+.gallery .gallery-item:hover .gallery-caption,
+.gallery .gallery-item:focus-visible .gallery-caption {
+  opacity: 1;
+}
+
+/* Variant: 2 columns */
+.gallery.columns-2 {
+  --gallery-columns: 2;
+}
+
+/* Variant: 4 columns */
+.gallery.columns-4 {
+  --gallery-columns: 4;
+}
+
+/* Tablet: max 2 columns */
+@media screen and (max-width: 1023px) {
+  .gallery {
+    --gallery-columns: 2;
+  }
+
+  .gallery.columns-2 {
+    --gallery-columns: 2;
+  }
+
+  .gallery.columns-4 {
+    --gallery-columns: 2;
+  }
+}
+
+/* Mobile: 1 column */
+@media screen and (max-width: 599px) {
+  .gallery {
+    --gallery-columns: 1;
+  }
+
+  .gallery.columns-2,
+  .gallery.columns-4 {
+    --gallery-columns: 1;
+  }
+}
