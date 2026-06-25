@@ -1,0 +1,87 @@
+/*
+ * Preflight Modal — Spectrum-2 (c2) design tokens
+ * All colour / spacing / typography values used by the preflight UI live here.
+ * Scoped to .preflight-modal so they never leak into the host page.
+ */
+.preflight-modal {
+  /* ── Colour ramp ─────────────────────────────────────────────────── */
+  --s2a-color-bg:              #ffffff;
+  --s2a-color-bg-secondary:    #f5f5f5;
+  --s2a-color-bg-hover:        #ebebeb;
+  --s2a-color-bg-active:       #e0e0e0;
+  --s2a-color-surface:         #fafafa;
+  --s2a-color-border:          #d0d0d0;
+  --s2a-color-border-strong:   #b0b0b0;
+
+  --s2a-color-text-primary:    #2c2c2c;
+  --s2a-color-text-secondary:  #6e6e6e;
+  --s2a-color-text-disabled:   #b0b0b0;
+  --s2a-color-text-inverse:    #ffffff;
+
+  --s2a-color-accent:          #1473e6;
+  --s2a-color-accent-hover:    #0d66d0;
+  --s2a-color-accent-subtle:   #e8f0fd;
+
+  --s2a-color-error:           #d7373f;
+  --s2a-color-error-bg:        #fdf3f3;
+  --s2a-color-error-border:    #f5c6c8;
+
+  --s2a-color-warning:         #e68619;
+  --s2a-color-warning-bg:      #fef8ee;
+  --s2a-color-warning-border:  #f9d89a;
+
+  --s2a-color-success:         #268e6c;
+  --s2a-color-success-bg:      #f0faf6;
+  --s2a-color-success-border:  #a8dcc8;
+
+  --s2a-color-info:            #1473e6;
+  --s2a-color-info-bg:         #e8f0fd;
+  --s2a-color-info-border:     #a8c4f5;
+
+  --s2a-color-badge-error:     #d7373f;
+  --s2a-color-badge-warning:   #e68619;
+  --s2a-color-badge-text:      #ffffff;
+
+  /* ── Spacing scale ───────────────────────────────────────────────── */
+  --s2a-space-1:   4px;
+  --s2a-space-2:   8px;
+  --s2a-space-3:  12px;
+  --s2a-space-4:  16px;
+  --s2a-space-5:  20px;
+  --s2a-space-6:  24px;
+  --s2a-space-8:  32px;
+  --s2a-space-10: 40px;
+  --s2a-space-12: 48px;
+
+  /* ── Border radius ───────────────────────────────────────────────── */
+  --s2a-radius-sm:  4px;
+  --s2a-radius-md:  8px;
+  --s2a-radius-lg: 12px;
+  --s2a-radius-xl: 16px;
+  --s2a-radius-pill: 999px;
+
+  /* ── Typography ──────────────────────────────────────────────────── */
+  --s2a-font-family: 'Adobe Clean', adobe-clean, 'Trebuchet MS', sans-serif;
+  --s2a-font-size-xs:   11px;
+  --s2a-font-size-sm:   12px;
+  --s2a-font-size-md:   14px;
+  --s2a-font-size-lg:   16px;
+  --s2a-font-size-xl:   18px;
+  --s2a-font-size-2xl:  22px;
+  --s2a-font-weight-regular: 400;
+  --s2a-font-weight-medium:  500;
+  --s2a-font-weight-bold:    700;
+  --s2a-line-height-tight:  1.2;
+  --s2a-line-height-normal: 1.5;
+
+  /* ── Shadows ─────────────────────────────────────────────────────── */
+  --s2a-shadow-sm:  0 1px 3px rgba(0,0,0,.10);
+  --s2a-shadow-md:  0 4px 12px rgba(0,0,0,.12);
+  --s2a-shadow-lg:  0 8px 24px rgba(0,0,0,.16);
+
+  /* ── Rail dimensions ─────────────────────────────────────────────── */
+  --s2a-rail-width:      220px;
+  --s2a-rail-width-sm:    56px;
+  --s2a-modal-max-width: 900px;
+  --s2a-modal-height:    600px;
+}
