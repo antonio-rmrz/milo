@@ -1,0 +1,110 @@
+/* ==========================================================================
+   Preflight Modal — Spectrum-2 (s2a) Token Fallbacks
+   Scoped to .preflight so these values never pollute the global :root.
+   When a real Spectrum-2 token sheet is present its values take precedence
+   because they are declared on :root (lower specificity than .preflight).
+   ========================================================================== */
+
+.preflight {
+  /* ── Colour: surfaces ─────────────────────────────────────────────────── */
+  --s2a-color-background:          #ffffff;
+  --s2a-color-surface-raised:      #f8f8f8;
+  --s2a-color-surface-overlay:     rgba(0, 0, 0, 0.04);
+
+  /* ── Colour: borders ──────────────────────────────────────────────────── */
+  --s2a-color-border-default:      #e0e0e0;
+
+  /* ── Colour: text ─────────────────────────────────────────────────────── */
+  --s2a-color-text-primary:        #2c2c2c;
+  --s2a-color-text-secondary:      #6e6e6e;
+  --s2a-color-text-on-cta:         #ffffff;
+  --s2a-color-text-link:           #1473e6;
+
+  /* ── Colour: interactive / CTA ────────────────────────────────────────── */
+  --s2a-color-interactive-cta-default:  #1473e6;
+  --s2a-color-interactive-cta-hover:    #0d66d0;
+  --s2a-color-interactive-cta-active:   #095aba;
+  --s2a-color-interactive-cta-disabled: #b0b0b0;
+
+  /* ── Colour: action / accent (hot-pink brand accent) ──────────────────── */
+  --s2a-color-action-default:      #ff1593;
+  --s2a-color-action-hover:        #e0007e;
+  --s2a-color-action-active:       #c4006e;
+
+  /* ── Colour: row hover overlay ────────────────────────────────────────── */
+  --s2a-color-row-hover:           rgba(0, 0, 0, 0.06);
+
+  /* ── Colour: tooltip ──────────────────────────────────────────────────── */
+  --s2a-color-tooltip-bg:          #ffffff;
+  --s2a-color-tooltip-text:        #ff1593;
+  --s2a-color-tooltip-arrow:       #ffffff;
+
+  /* ── Colour: actions bar gradient ────────────────────────────────────────*/
+  --s2a-color-actions-gradient-start: rgba(248, 248, 248, 0.95);
+  --s2a-color-actions-gradient-end:   rgba(248, 248, 248, 0);
+
+  /* ── Focus ────────────────────────────────────────────────────────────── */
+  --s2a-color-focus-ring:          #1473e6;
+
+  /* ── Shadow / elevation ───────────────────────────────────────────────── */
+  --s2a-shadow-elevated:           0 4px 16px rgba(0, 0, 0, 0.12);
+
+  /* ── Border radius ────────────────────────────────────────────────────── */
+  --s2a-radius-modal:              12px;
+  --s2a-radius-button:             4px;
+  --s2a-radius-tab-indicator:      2px;
+  --s2a-radius-tooltip:            4px;
+
+  /* ── Spacing ──────────────────────────────────────────────────────────── */
+  --s2a-spacing-modal-padding:     24px;
+  --s2a-spacing-tab-gap:           18px;
+  --s2a-spacing-row-padding-v:     12px;
+  --s2a-spacing-row-padding-h:     24px;
+  --s2a-spacing-section-gap:       24px;
+  --s2a-spacing-column-gap:        48px;
+  --s2a-spacing-item-gap:          12px;
+  --s2a-spacing-tab-indicator-mt:  6px;
+  --s2a-spacing-notch:             12px;
+  --s2a-spacing-action-height:     36px;
+  --s2a-spacing-action-padding-h:  18px;
+  --s2a-spacing-icon-size:         60px;
+  --s2a-spacing-icon-size-sm:      32px;
+  --s2a-spacing-icon-size-expand:  24px;
+  --s2a-spacing-expand-height:     18px;
+  --s2a-spacing-edit-height:       32px;
+  --s2a-spacing-detail-min-height: 60px;
+  --s2a-spacing-detail-icon-left:  18px;
+  --s2a-spacing-detail-text-ml:    40px;
+  --s2a-spacing-general-mb:        72px;
+  --s2a-spacing-tooltip-padding:   10px;
+  --s2a-spacing-tooltip-max-w:     157px;
+
+  /* ── Typography ───────────────────────────────────────────────────────── */
+  --s2a-font-size-title:           38px;
+  --s2a-font-size-tab:             24px;
+  --s2a-font-size-action:          16px;
+  --s2a-font-size-time:            14px;
+  --s2a-font-size-tooltip:         14px;
+  --s2a-font-size-structure-title: 32px;
+  --s2a-font-size-disabled:        0.8em;
+  --s2a-font-weight-bold:          700;
+  --s2a-line-height-tight:         1;
+  --s2a-line-height-tooltip:       19px;
+
+  /* ── Modal dimensions ─────────────────────────────────────────────────── */
+  --s2a-modal-width:               1200px;
+  --s2a-modal-max-width:           calc(84vw - 40px);
+  --s2a-modal-height:              680px;
+  --s2a-modal-max-height:          calc(100vh - 40px);
+
+  /* ── Grid columns ─────────────────────────────────────────────────────── */
+  --s2a-grid-row-cols:             minmax(0, 1fr) 80px 140px 140px;
+  --s2a-grid-row-heading-cols:     42px 1fr 80px 140px 140px;
+  --s2a-grid-actions-cols:         auto 1fr 140px 140px;
+
+  /* ── Transition ───────────────────────────────────────────────────────── */
+  --s2a-transition-expand:         transform 0.2s ease-in-out;
+  --s2a-transition-items:          max-height 0.2s ease-in-out;
+  --s2a-transition-outline:        outline 300ms;
+  --s2a-transition-tooltip:        opacity 0.3s, visibility 0.3s;
+}

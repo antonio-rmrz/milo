@@ -1,5 +1,5 @@
 import { html, render, signal } from '../../deps/htm-preact.js';
-import { createTag, getConfig } from '../../utils/utils.js';
+import { createTag, getConfig, loadStyle } from '../../utils/utils.js';
 import General from './panels/general.js';
 import SEO from './panels/seo.js';
 import Accessibility from './accessibility/accessibility.js';
@@ -113,6 +113,11 @@ function preloadAssets(el) {
 }
 
 export default async function init(el) {
+  const { miloLibs, codeRoot } = getConfig();
+  const base = miloLibs || codeRoot;
+  await new Promise((resolve) => {
+    loadStyle(`${base}/blocks/preflight/preflight-tokens.css`, resolve);
+  });
   await preloadAssets(el);
   render(html`<${Preflight} />`, el);
 }
