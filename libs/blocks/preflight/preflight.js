@@ -113,6 +113,9 @@ function preloadAssets(el) {
 }
 
 export default async function init(el) {
+  // Add Spectrum-2 scope class so --s2a-* token CSS rules apply.
+  // This is the only change to the JS layer; all behaviour is unchanged.
+  el.classList.add('preflight-s2');
   await preloadAssets(el);
   render(html`<${Preflight} />`, el);
 }
