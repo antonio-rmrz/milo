@@ -1,0 +1,165 @@
+/*
+ * Preflight Modal — Spectrum 2 Alias (--s2a-*) Design Tokens
+ * All color, spacing, typography, shadow, and radius values used by
+ * preflight.css and panel CSS live here. No hard-coded values elsewhere.
+ */
+
+:root,
+.preflight-modal {
+  /* ── Color primitives ─────────────────────────────────────────────── */
+  --s2a-color-white:          #ffffff;
+  --s2a-color-black:          #000000;
+
+  /* Gray scale */
+  --s2a-color-gray-50:        #fafafa;
+  --s2a-color-gray-75:        #f5f5f5;
+  --s2a-color-gray-100:       #f0f0f0;
+  --s2a-color-gray-200:       #e0e0e0;
+  --s2a-color-gray-300:       #c8c8c8;
+  --s2a-color-gray-400:       #ababab;
+  --s2a-color-gray-500:       #8d8d8d;
+  --s2a-color-gray-600:       #6f6f6f;
+  --s2a-color-gray-700:       #4b4b4b;
+  --s2a-color-gray-800:       #2c2c2c;
+  --s2a-color-gray-900:       #1a1a1a;
+
+  /* Accent / Blue */
+  --s2a-color-accent-100:     #e8f4fd;
+  --s2a-color-accent-200:     #b3d9f7;
+  --s2a-color-accent-400:     #4b9cf5;
+  --s2a-color-accent-500:     #1473e6;
+  --s2a-color-accent-600:     #0d66d0;
+  --s2a-color-accent-700:     #095aba;
+
+  /* Red */
+  --s2a-color-red-100:        #fff0ee;
+  --s2a-color-red-200:        #ffbcb5;
+  --s2a-color-red-400:        #f75c4c;
+  --s2a-color-red-500:        #e34850;
+  --s2a-color-red-600:        #c9252d;
+  --s2a-color-red-700:        #bb121a;
+
+  /* Orange */
+  --s2a-color-orange-100:     #fff4e6;
+  --s2a-color-orange-200:     #ffd4a0;
+  --s2a-color-orange-400:     #f7a233;
+  --s2a-color-orange-500:     #e68619;
+  --s2a-color-orange-600:     #cb6f10;
+  --s2a-color-orange-700:     #b35a00;
+
+  /* Green */
+  --s2a-color-green-100:      #edfaee;
+  --s2a-color-green-200:      #9de9a8;
+  --s2a-color-green-400:      #33ab84;
+  --s2a-color-green-500:      #2d9d78;
+  --s2a-color-green-600:      #268e6c;
+  --s2a-color-green-700:      #12805c;
+
+  /* Blue-info */
+  --s2a-color-info-100:       #e8f4fd;
+  --s2a-color-info-400:       #2680eb;
+  --s2a-color-info-500:       #1473e6;
+
+  /* ── Semantic aliases ─────────────────────────────────────────────── */
+  --s2a-bg:                   var(--s2a-color-white);
+  --s2a-surface:              var(--s2a-color-gray-75);
+  --s2a-surface-raised:       var(--s2a-color-white);
+  --s2a-border:               var(--s2a-color-gray-200);
+  --s2a-border-strong:        var(--s2a-color-gray-300);
+
+  --s2a-text-primary:         var(--s2a-color-gray-900);
+  --s2a-text-secondary:       var(--s2a-color-gray-700);
+  --s2a-text-disabled:        var(--s2a-color-gray-400);
+  --s2a-text-on-accent:       var(--s2a-color-white);
+
+  --s2a-interactive-default:  var(--s2a-color-accent-500);
+  --s2a-interactive-hover:    var(--s2a-color-accent-600);
+  --s2a-interactive-active:   var(--s2a-color-accent-700);
+  --s2a-interactive-focus-ring: var(--s2a-color-accent-500);
+
+  --s2a-nav-bg:               var(--s2a-color-gray-75);
+  --s2a-nav-active-bg:        var(--s2a-color-accent-100);
+  --s2a-nav-active-border:    var(--s2a-color-accent-500);
+  --s2a-nav-hover-bg:         var(--s2a-color-gray-100);
+
+  /* Status */
+  --s2a-status-error-bg:      var(--s2a-color-red-100);
+  --s2a-status-error-text:    var(--s2a-color-red-700);
+  --s2a-status-error-border:  var(--s2a-color-red-400);
+  --s2a-status-error-badge:   var(--s2a-color-red-500);
+
+  --s2a-status-warning-bg:    var(--s2a-color-orange-100);
+  --s2a-status-warning-text:  var(--s2a-color-orange-700);
+  --s2a-status-warning-border:var(--s2a-color-orange-400);
+  --s2a-status-warning-badge: var(--s2a-color-orange-500);
+
+  --s2a-status-success-bg:    var(--s2a-color-green-100);
+  --s2a-status-success-text:  var(--s2a-color-green-700);
+  --s2a-status-success-border:var(--s2a-color-green-400);
+
+  --s2a-status-info-bg:       var(--s2a-color-info-100);
+  --s2a-status-info-text:     var(--s2a-color-info-500);
+  --s2a-status-info-border:   var(--s2a-color-info-400);
+
+  /* ── Spacing scale ────────────────────────────────────────────────── */
+  --s2a-space-2:   2px;
+  --s2a-space-4:   4px;
+  --s2a-space-6:   6px;
+  --s2a-space-8:   8px;
+  --s2a-space-12:  12px;
+  --s2a-space-16:  16px;
+  --s2a-space-20:  20px;
+  --s2a-space-24:  24px;
+  --s2a-space-32:  32px;
+  --s2a-space-40:  40px;
+  --s2a-space-48:  48px;
+  --s2a-space-64:  64px;
+
+  /* Popover pin offsets */
+  --s2a-popover-top:  var(--s2a-space-16);
+  --s2a-popover-left: var(--s2a-space-16);
+
+  /* ── Typography ───────────────────────────────────────────────────── */
+  --s2a-font-family:       adobe-clean, 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --s2a-font-mono:         'Source Code Pro', 'Courier New', Courier, monospace;
+
+  --s2a-font-size-xs:      11px;
+  --s2a-font-size-sm:      12px;
+  --s2a-font-size-md:      14px;
+  --s2a-font-size-lg:      16px;
+  --s2a-font-size-xl:      20px;
+  --s2a-font-size-2xl:     24px;
+  --s2a-font-size-3xl:     28px;
+
+  --s2a-font-weight-regular: 400;
+  --s2a-font-weight-medium:  500;
+  --s2a-font-weight-bold:    700;
+
+  --s2a-line-height-tight:  1.2;
+  --s2a-line-height-normal: 1.5;
+
+  /* ── Border radius ────────────────────────────────────────────────── */
+  --s2a-radius-sm:   4px;
+  --s2a-radius-md:   8px;
+  --s2a-radius-lg:   12px;
+  --s2a-radius-full: 9999px;
+
+  /* ── Shadows ──────────────────────────────────────────────────────── */
+  --s2a-shadow-sm:  0 1px 3px 0 rgb(0 0 0 / 10%), 0 1px 2px -1px rgb(0 0 0 / 10%);
+  --s2a-shadow-md:  0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 4px -2px rgb(0 0 0 / 10%);
+  --s2a-shadow-lg:  0 10px 15px -3px rgb(0 0 0 / 10%), 0 4px 6px -4px rgb(0 0 0 / 10%);
+
+  /* ── Nav rail dimensions ──────────────────────────────────────────── */
+  --s2a-rail-width-collapsed: 64px;
+  --s2a-rail-width-expanded:  200px;
+  --s2a-top-nav-height:       52px;
+
+  /* ── Asset thumbnail ──────────────────────────────────────────────── */
+  --s2a-thumb-size: 48px;
+
+  /* ── Progress ring ────────────────────────────────────────────────── */
+  --s2a-ring-size:   36px;
+  --s2a-ring-stroke: 3px;
+  --s2a-ring-color:  var(--s2a-color-accent-500);
+  --s2a-ring-track:  var(--s2a-color-gray-200);
+}

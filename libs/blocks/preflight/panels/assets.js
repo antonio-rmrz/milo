@@ -3,6 +3,52 @@ import { STATUS } from '../checks/constants.js';
 import { getPreflightResults } from '../checks/preflightApi.js';
 import { isViewportTooSmall } from '../checks/assets.js';
 
+/**
+ * Close the preflight modal (dialog), scroll to the target element,
+ * and inject a fixed 'Back to Preflight' popover.
+ * @param {Element|null} targetEl - The page element to scroll to.
+ * @param {Function} reopenFn - Callback that re-opens the preflight modal.
+ */
+export function navigateToAsset(targetEl, reopenFn) {
+  // Remove any existing popover first
+  const existing = document.querySelector('.preflight-back-popover');
+  if (existing) existing.remove();
+
+  // Close the preflight dialog
+  const dialog = document.querySelector('.dialog-modal#preflight');
+  if (dialog) {
+    const closeBtn = dialog.querySelector('[daa-ll="Close"], .dialog-close, button[aria-label="Close"]');
+    if (closeBtn) {
+      closeBtn.click();
+    } else {
+      dialog.style.display = 'none';
+    }
+  }
+
+  // Scroll to the element
+  if (targetEl) {
+    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // Inject Back-to-Preflight popover
+  const popover = document.createElement('div');
+  popover.className = 'preflight-back-popover';
+  popover.setAttribute('role', 'complementary');
+  popover.setAttribute('aria-label', 'Back to Preflight');
+
+  const btn = document.createElement('button');
+  btn.className = 'preflight-back-popover-btn';
+  btn.textContent = '← Back to Preflight';
+  btn.setAttribute('type', 'button');
+  btn.addEventListener('click', () => {
+    popover.remove();
+    if (typeof reopenFn === 'function') reopenFn();
+  });
+
+  popover.appendChild(btn);
+  document.body.appendChild(popover);
+}
+
 // Define signals for check results and viewport status
 const assetDimensionsResult = signal({
   title: 'Asset Dimensions',
@@ -85,8 +131,21 @@ function AssetGroup({ group }) {
     const isAboveFoldWithMismatch = isCriticalGroup;
     const itemClass = isAboveFoldWithMismatch ? 'assets-image-grid-item above-fold-critical' : 'assets-image-grid-item';
 
+    const handleAssetClick = () => {
+      const el = document.querySelector(`img[src='${asset.src}'], video[src='${asset.src}']`);
+      navigateToAsset(el, () => {
+        // Re-open by dispatching a custom event that the modal host can listen to
+        document.dispatchEvent(new CustomEvent('preflight:reopen'));
+      });
+    };
     return html`
-      <div class='${itemClass}' title='${isAboveFoldWithMismatch ? 'Above-the-fold asset with critical dimension issues' : ''}'>
+      <div
+        class='${itemClass}'
+        title='${isAboveFoldWithMismatch ? 'Above-the-fold asset with critical dimension issues' : ''}'
+        role="button"
+        tabindex="0"
+        onClick=${handleAssetClick}
+        onKeyDown=${(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleAssetClick(); } }}>
         ${asset.type === 'image' && html`<img src='${asset.src}' />`}
         ${asset.type === 'video' && html`<video controls src='${asset.src}' />`}
         ${asset.type === 'mpc' && html`<iframe src='${asset.src}' />`}

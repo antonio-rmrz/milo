@@ -4,6 +4,9 @@ import { STATUS_TO_ICON_MAP } from '../checks/constants.js';
 
 const { getLcpEntry, runChecks } = preflightApi.performance;
 
+// Signal: whether a valid LCP element was detected (controls link visibility)
+const lcpElementFound = signal(false);
+
 // Define signals for each performance check result
 const lcpElResult = signal({ icon: 'purple', title: 'Valid LCP', description: 'Checking...' });
 const singleBlockResult = signal({ icon: 'purple', title: 'Single Block', description: 'Checking...' });
@@ -51,6 +54,14 @@ async function getResults() {
   });
 
   await Promise.all(checkPromises);
+
+  // Determine whether a valid LCP element exists to conditionally show the highlight link
+  try {
+    const lcp = await getLcpEntry(window.location.pathname, document);
+    lcpElementFound.value = !!(lcp && lcp.element);
+  } catch {
+    lcpElementFound.value = false;
+  }
 }
 
 /**
@@ -131,10 +142,13 @@ export default function Panel() {
         <${PerformanceItem} ...${iconsResult.value} />
       </div>
       <div>Unsure on how to get this page fully into the green? Check out the <a class="performance-guidelines" href="https://milo.adobe.com/docs/authoring/performance/" target="_blank">Milo Performance Guidelines</a>.</div>
-      <div> 
-        <span class="performance-element-preview" onMouseEnter=${highlightElement} onMouseLeave=${removeHighlight}>
+      <div>
+        <span
+          class=${`performance-element-preview${lcpElementFound.value ? '' : ' hidden'}`}
+          onMouseEnter=${highlightElement}
+          onMouseLeave=${removeHighlight}>
           Highlight the found LCP section
-        </span> 
+        </span>
       </div>
       <div class="lcp-tooltip-modal"></div>
     </div>

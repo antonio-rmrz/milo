@@ -1,8 +1,9 @@
 import { html, signal, useEffect } from '../../../deps/htm-preact.js';
-import { STATUS_TO_ICON_MAP, STRUCTURE_TITLES } from '../checks/constants.js';
+import { STATUS_TO_ICON_MAP, STRUCTURE_TITLES, STATUS } from '../checks/constants.js';
 import { runChecks as runStructureChecks } from '../checks/structure.js';
 import userCanPublishPage from '../../../tools/utils/publish.js';
 import { runChecks as runLocalizationChecks } from '../checks/localization.js';
+import { updateTabBadge } from '../preflight.js';
 
 const DEF_NOT_FOUND = 'Not found';
 const DEF_NEVER = 'Never';
@@ -65,7 +66,11 @@ async function getLocalizationResults() {
       title: res.title,
       description: res.description,
     };
-    localizationIssues.value = res.details?.violations || [];
+    const violations = res.details?.violations || [];
+    localizationIssues.value = violations;
+    // Update General tab badge to include localization issue count
+    const localizationErrors = res.status === STATUS.FAIL ? violations.length : 0;
+    updateTabBadge('General', localizationErrors, 0);
   } catch (error) {
     localizationResult.value = {
       icon: 'red',
