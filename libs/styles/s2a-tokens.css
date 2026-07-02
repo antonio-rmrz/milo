@@ -1,0 +1,118 @@
+/*
+ * s2a-tokens.css
+ * Spectrum-2 Alias (s2a) design-token declarations — light theme surface.
+ *
+ * Namespace : --s2a-*
+ * Scope     : :root  (global cascade; does NOT override --spectrum-* variables)
+ * Usage     : Reference these tokens inside block stylesheets.
+ *             Never hardcode hex / rgb / pixel values for design decisions.
+ *
+ * Token categories
+ *   --s2a-color-*          Brand / UI colours
+ *   --s2a-bg-*             Background colours
+ *   --s2a-text-*           Text / foreground colours
+ *   --s2a-border-*         Border colours & radii
+ *   --s2a-shadow-*         Elevation / box-shadow
+ *   --s2a-spacing-*        Margin / padding / gap scale
+ *   --s2a-font-size-*      Typographic scale
+ *   --s2a-font-weight-*    Font weights
+ *   --s2a-line-height-*    Line heights
+ *   --s2a-state-*          Interactive-state overlays
+ *   --s2a-focus-*          Focus-ring tokens
+ *   --s2a-overlay-*        Modal overlay / backdrop
+ *
+ * Breakpoints (informational — used in block CSS media queries)
+ *   --s2a-breakpoint-md  : 900px   (two-column starts)
+ *   --s2a-breakpoint-lg  : 1200px  (wider two-column)
+ */
+
+:root {
+  /* ── Breakpoints ─────────────────────────────────────────────────────── */
+  --s2a-breakpoint-md: 900px;
+  --s2a-breakpoint-lg: 1200px;
+
+  /* ── Background colours ──────────────────────────────────────────────── */
+  /* Spectrum-2 light theme: neutral-50 surface (white) */
+  --s2a-bg-surface:          #ffffff;
+  --s2a-bg-surface-raised:   #f8f8f8;
+  --s2a-bg-surface-overlay:  #f0f0f0;
+  --s2a-bg-header:           #1a1a1a;
+  --s2a-bg-action:           #ff1593;
+  --s2a-bg-action-hover:     #e0007e;
+  --s2a-bg-action-active:    #c4006e;
+  --s2a-bg-action-disabled:  #f0a0cc;
+
+  /* ── Text / foreground colours ───────────────────────────────────────── */
+  --s2a-text-primary:        #2c2c2c;
+  --s2a-text-secondary:      #6e6e6e;
+  --s2a-text-on-dark:        #ffffff;
+  --s2a-text-on-action:      #ffffff;
+  --s2a-text-link:           #274dea;
+  --s2a-text-link-hover:     #1d3ecf;
+  --s2a-text-disabled:       #b0b0b0;
+
+  /* ── Brand / UI colours ──────────────────────────────────────────────── */
+  --s2a-color-accent:        #ff1593;
+  --s2a-color-accent-hover:  #e0007e;
+  --s2a-color-focus-ring:    #378ef0;
+
+  /* ── Border ──────────────────────────────────────────────────────────── */
+  --s2a-border-color:        #d4d4d4;
+  --s2a-border-color-strong: #909090;
+  --s2a-border-radius-s:     4px;
+  --s2a-border-radius-m:     6px;
+  --s2a-border-radius-l:     8px;
+  --s2a-border-radius-xl:    12px;
+
+  /* ── Elevation / shadow ──────────────────────────────────────────────── */
+  /* overlay-level shadow for modal dialogs */
+  --s2a-shadow-overlay-color-1: rgb(0 0 0 / 12%);
+  --s2a-shadow-overlay-color-2: rgb(0 0 0 / 8%);
+  --s2a-shadow-overlay: 0 8px 32px var(--s2a-shadow-overlay-color-1),
+                        0 2px 8px  var(--s2a-shadow-overlay-color-2);
+
+  /* ── Spacing scale ───────────────────────────────────────────────────── */
+  --s2a-spacing-xxs:  4px;
+  --s2a-spacing-xs:   8px;
+  --s2a-spacing-s:    12px;
+  --s2a-spacing-m:    16px;
+  --s2a-spacing-l:    24px;
+  --s2a-spacing-xl:   32px;
+  --s2a-spacing-xxl:  48px;
+  --s2a-spacing-xxxl: 64px;
+
+  /* ── Typography — font sizes ─────────────────────────────────────────── */
+  --s2a-font-size-heading-xl:  38px;
+  --s2a-font-size-heading-l:   32px;
+  --s2a-font-size-heading-m:   24px;
+  --s2a-font-size-heading-s:   18px;
+  --s2a-font-size-body-l:      18px;
+  --s2a-font-size-body-m:      16px;
+  --s2a-font-size-body-s:      14px;
+  --s2a-font-size-body-xs:     12px;
+
+  /* ── Typography — line heights ───────────────────────────────────────── */
+  --s2a-line-height-heading: 1;
+  --s2a-line-height-body:    1.5;
+  --s2a-line-height-compact: 1.2;
+
+  /* ── Typography — font weights ───────────────────────────────────────── */
+  --s2a-font-weight-regular: 400;
+  --s2a-font-weight-medium:  500;
+  --s2a-font-weight-bold:    700;
+
+  /* ── Interactive state overlays ──────────────────────────────────────── */
+  /* Applied as background-color on top of the base surface */
+  --s2a-state-hover-bg:    rgb(0 0 0 / 6%);
+  --s2a-state-active-bg:   rgb(0 0 0 / 12%);
+  --s2a-state-focus-bg:    rgb(55 142 240 / 10%);
+  --s2a-state-disabled-opacity: 0.4;
+
+  /* ── Focus ring ──────────────────────────────────────────────────────── */
+  --s2a-focus-ring-color:  #378ef0;
+  --s2a-focus-ring-width:  2px;
+  --s2a-focus-ring-offset: 2px;
+
+  /* ── Modal overlay / backdrop ────────────────────────────────────────── */
+  --s2a-color-overlay-background: rgb(50 50 50 / 80%);
+}
