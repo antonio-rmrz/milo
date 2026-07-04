@@ -4,7 +4,6 @@ import { createTag, getMetadata, localizeLinkAsync, loadStyle, getConfig } from 
 import { decorateSectionAnalytics } from '../../martech/attributes.js';
 
 const LOCALE_MODAL_ID = 'locale-modal-v2';
-const FOCUSABLES = 'a:not(.hide-video, .faas), button:not([disabled], .locale-modal-v2 .paddle), input, textarea, select, details, [tabindex]:not([tabindex="-1"])';
 const CLOSE_ICON = `<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
   <g transform="translate(-10500 3403)">
     <circle cx="10" cy="10" r="10" transform="translate(10500 -3403)"/>
@@ -147,16 +146,6 @@ export async function closeModal(modal, shouldFocusTriggerEl = true) {
   focusTriggerElement(id, shouldFocusTriggerEl);
 }
 
-function isElementInView(element) {
-  const rect = element.getBoundingClientRect();
-  return (
-    rect.top >= 0
-    && rect.left >= 0
-    && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
-    && rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-  );
-}
-
 function getCustomModal(custom, dialog) {
   const { miloLibs, codeRoot } = getConfig();
   loadStyle(`${miloLibs || codeRoot}/blocks/modal/modal.css`);
@@ -238,17 +227,15 @@ export async function getModal(details, custom) {
   const focusPlaceholder = createTag('div', { class: 'dialog-focus-placeholder', tabindex: 0 });
 
   const focusVisible = { focusVisible: true };
-  const focusablesOnLoad = [...dialog.querySelectorAll(FOCUSABLES)];
-  const titleOnLoad = dialog.querySelector('h1, h2, h3, h4, h5');
+  const titleOnLoad = dialog.querySelector('h1, h2, h3, h4, h5, h6');
   let firstFocusable;
 
-  if (focusablesOnLoad.length && isElementInView(focusablesOnLoad[0])) {
-    firstFocusable = focusablesOnLoad[0]; // eslint-disable-line prefer-destructuring
-  } else if (titleOnLoad) {
-    titleOnLoad.setAttribute('tabIndex', 0);
+  if (titleOnLoad) {
+    if (!titleOnLoad.hasAttribute('tabindex')) titleOnLoad.setAttribute('tabindex', -1);
     firstFocusable = titleOnLoad;
   } else {
-    firstFocusable = close;
+    dialog.setAttribute('tabindex', -1);
+    firstFocusable = dialog;
   }
 
   let shiftTabOnClose = false;
@@ -262,6 +249,13 @@ export async function getModal(details, custom) {
   focusPlaceholder.addEventListener('focus', () => {
     if (!shiftTabOnClose) close.focus(focusVisible);
     shiftTabOnClose = false;
+  });
+
+  // Keeps Shift+Tab inside the dialog when the container itself holds focus
+  dialog.addEventListener('keydown', (event) => {
+    if (event.target !== dialog || event.key !== 'Tab' || !event.shiftKey) return;
+    shiftTabOnClose = true;
+    focusPlaceholder.focus(focusVisible);
   });
 
   close.addEventListener('click', (e) => {
@@ -283,7 +277,7 @@ export async function getModal(details, custom) {
   dialog.append(focusPlaceholder);
   document.body.append(dialog);
   dialogLoadingSet.delete(id);
-  firstFocusable?.focus({ preventScroll: true, ...focusVisible });
+  firstFocusable?.focus({ preventScroll: false, ...focusVisible });
   window.dispatchEvent(loadedEvent);
 
   if (!dialog.classList.contains('curtain-off')) {

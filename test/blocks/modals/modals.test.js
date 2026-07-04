@@ -130,11 +130,15 @@ describe('Modals', () => {
     await delay(5);
   });
 
-  it('Locks focus when tabbing forward through tabbable elements', async () => {
+  it('Focuses the heading on open and locks focus when tabbing forward', async () => {
     window.location.hash = '#milo';
     await waitForElement('#milo');
     expect(document.getElementById('milo')).to.exist;
     await delay(100);
+    const heading = document.querySelector('#milo h1');
+    expect(document.activeElement).to.equal(heading);
+    expect(heading.getAttribute('tabindex')).to.equal('-1');
+    await sendKeys({ press: 'Tab' });
     expect(document.activeElement.getAttribute('id')).to.equal('milo-button-1');
     await sendKeys({ press: 'Tab' });
     expect(document.activeElement.getAttribute('id')).to.equal('milo-button-2');
@@ -153,7 +157,7 @@ describe('Modals', () => {
     await waitForElement('#milo');
     await delay(200);
     expect(document.getElementById('milo')).to.exist;
-    expect(document.activeElement.getAttribute('id')).to.equal('milo-button-1');
+    expect(document.activeElement).to.equal(document.querySelector('#milo h1'));
     await sendKeys({ down: 'Shift' });
     await sendKeys({ press: 'Tab' });
     await sendKeys({ up: 'Shift' });
@@ -168,7 +172,7 @@ describe('Modals', () => {
     expect(document.getElementById('milo')).not.to.exist;
   });
 
-  it('Focuses on close when there are no other focusables', async () => {
+  it('Focuses on the modal container when there is no heading', async () => {
     const meta = document.createElement('meta');
     meta.name = '-paragraph';
     meta.content = 'http://localhost:2000/test/blocks/modals/mocks/paragraph';
@@ -176,13 +180,19 @@ describe('Modals', () => {
     window.location.hash = '#paragraph';
     await waitForElement('#paragraph');
     await delay(200);
-    expect(document.getElementById('paragraph')).to.exist;
+    const modal = document.getElementById('paragraph');
+    expect(modal).to.exist;
+    expect(document.activeElement).to.equal(modal);
+    expect(modal.getAttribute('tabindex')).to.equal('-1');
+    await sendKeys({ down: 'Shift' });
+    await sendKeys({ press: 'Tab' });
+    await sendKeys({ up: 'Shift' });
     expect(document.activeElement.classList.contains('dialog-close')).to.be.true;
     window.location.hash = '';
     await waitForRemoval('#paragraph');
   });
 
-  it('Focuses on a header when there are no other focusables', async () => {
+  it('Focuses on a header without adding it to the tab order', async () => {
     const meta = document.createElement('meta');
     meta.name = '-title';
     meta.content = 'http://localhost:2000/test/blocks/modals/mocks/title';
@@ -192,8 +202,21 @@ describe('Modals', () => {
     await waitForElement('#title');
     expect(document.getElementById('title')).to.exist;
     expect(document.activeElement.getAttribute('id')).to.equal('test-title');
+    expect(document.activeElement.getAttribute('tabindex')).to.equal('-1');
     window.location.hash = '';
     await waitForRemoval('#title');
+  });
+
+  it('Returns focus to the trigger element on close', async () => {
+    const trigger = document.getElementById('milo-modal-link');
+    trigger.focus();
+    window.location.hash = '#milo';
+    await waitForElement('#milo');
+    await delay(100);
+    expect(document.activeElement).to.equal(document.querySelector('#milo h1'));
+    document.querySelector('#milo .dialog-close').click();
+    await waitForRemoval('#milo');
+    expect(document.activeElement).to.equal(trigger);
   });
 
   it('does not error for a modal with a non-querySelector compliant hash', async () => {
