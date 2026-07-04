@@ -130,6 +130,23 @@ describe('Modals', () => {
     await delay(5);
   });
 
+  it('Opens a deep-linked modal when the CTA hash includes a #_button modifier', async () => {
+    const anchor = createTag('a', {
+      href: '#watch-video#_button-fill',
+      'data-modal-path': '/test/blocks/modals/mocks/milo',
+      'data-modal-hash': '#watch-video#_button-fill',
+    }, 'Watch video');
+    document.body.appendChild(anchor);
+    window.location.hash = '#watch-video';
+    const modal = await init(anchor);
+    expect(modal).to.exist;
+    expect(document.getElementById('watch-video')).to.exist;
+    window.location.hash = '';
+    await waitForRemoval('#watch-video');
+    expect(document.getElementById('watch-video')).to.be.null;
+    anchor.remove();
+  });
+
   it('Locks focus when tabbing forward through tabbable elements', async () => {
     window.location.hash = '#milo';
     await waitForElement('#milo');
