@@ -1,6 +1,12 @@
 import { sendAnalytics } from '../../../martech/helpers.js';
 import { processTrackingLabels } from '../../../martech/attributes.js';
-import { createTag, getFederatedUrl, getFederatedContentRoot, getConfig } from '../../../utils/utils.js';
+import {
+  createTag,
+  getFederatedUrl,
+  getFederatedContentRoot,
+  getConfig,
+  shouldBlockFreeTrialLinks,
+} from '../../../utils/utils.js';
 import { getMetadata } from '../section-metadata/section-metadata.js';
 
 let USER_ACTION = false;
@@ -165,7 +171,13 @@ const decorateCtas = (textCol) => {
   const secondary = cta.querySelector('em > a');
   primary?.classList.add('con-button', 'rm-cta-primary', 'fill', 'outline');
   secondary?.classList.add('con-button', 'outline');
-  cta.replaceChildren(...[primary, secondary].filter(Boolean));
+  const ctas = [primary, secondary]
+    .filter((link) => link && !shouldBlockFreeTrialLinks(link));
+  if (!ctas.length) {
+    cta.remove();
+    return;
+  }
+  cta.replaceChildren(...ctas);
 };
 
 const prepareVideo = (imageCol) => {
