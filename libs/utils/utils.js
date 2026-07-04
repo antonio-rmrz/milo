@@ -547,6 +547,17 @@ export const getFedsPlaceholderConfig = ({ useCache = true } = {}) => {
 };
 
 /**
+ * BACOM is exempt from the KR free-trial suppression (MWPW-196133).
+ * Hostnames mirror the BACOM entries in stageDomainsMap in libs/scripts/scripts.js.
+ */
+export const isBacom = (origin = getConfig()?.origin || window.location.origin) => {
+  const hostname = origin.replace(/^https?:\/\//, '');
+  return hostname === 'business.adobe.com'
+    || hostname === 'business.stage.adobe.com'
+    || hostname.includes('--bacom--');
+};
+
+/**
  * TODO: This method will be deprecated and removed in a future version.
  * @see https://jira.corp.adobe.com/browse/MWPW-173470
  * @see https://jira.corp.adobe.com/browse/MWPW-174411
@@ -559,7 +570,7 @@ export const shouldAllowKrTrial = (link, localePrefix) => {
     const modalHash = link.getAttribute('data-modal-hash');
     if (modalHash) link.setAttribute('data-modal-hash', modalHash.replace(allowKrTrialHash, ''));
   }
-  return localePrefix === '/kr' && hasAllowKrTrial;
+  return localePrefix === '/kr' && (hasAllowKrTrial || isBacom());
 };
 
 /**
