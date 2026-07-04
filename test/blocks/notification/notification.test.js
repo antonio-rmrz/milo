@@ -203,4 +203,40 @@ describe('notification', async () => {
       expect(focusNotification.getAttribute('aria-label')).to.equal('Get the full experience in app Dialog');
     });
   });
+
+  describe('sticky top ribbon stacking order', () => {
+    const styleTags = [];
+
+    before(async () => {
+      const cssFiles = await Promise.all([
+        '../../../libs/styles/styles.css',
+        '../../../libs/blocks/section-metadata/section-metadata.css',
+        '../../../libs/styles/consonant-play-button.css',
+      ].map((path) => readFile({ path })));
+      cssFiles.forEach((css) => {
+        const style = document.createElement('style');
+        style.textContent = css;
+        document.head.append(style);
+        styleTags.push(style);
+      });
+    });
+
+    after(() => {
+      styleTags.forEach((style) => style.remove());
+    });
+
+    it('renders the sticky top ribbon above a foreground image with a play button', () => {
+      document.body.innerHTML = `
+        <main>
+          <div class="section sticky-top"><div class="notification ribbon"></div></div>
+          <div class="section"><span class="modal-img-link"><a class="consonant-play-btn"></a></span></div>
+        </main>`;
+      const ribbonSection = document.querySelector('.section.sticky-top');
+      const imgLink = document.querySelector('.modal-img-link');
+      expect(window.getComputedStyle(ribbonSection).position).to.equal('sticky');
+      const ribbonZ = Number(window.getComputedStyle(ribbonSection).zIndex);
+      const imgLinkZ = Number(window.getComputedStyle(imgLink).zIndex);
+      expect(ribbonZ).to.be.greaterThan(imgLinkZ);
+    });
+  });
 });

@@ -91,7 +91,7 @@ html[lang="ja-jp"] .hero-marquee .action-area wbr:last-of-type{
 }
 
 .hero-marquee .foreground-media {
-  z-index: 1;
+  z-index: var(--z-index-foreground, 1);
 }
 
 .hero-marquee .foreground-media picture img,

@@ -132,6 +132,11 @@
   --icon-size-s: 32px;
   --icon-size-xs: 24px;
   --icon-size-xxs: 16px;
+
+  /* z-index scale: foreground < media overlay < sticky ribbon < global navigation (10) < modal (102) */
+  --z-index-foreground: 1;
+  --z-index-media-overlay: 4;
+  --z-index-sticky-ribbon: 5;
 }
 
 :root:lang(ar) {

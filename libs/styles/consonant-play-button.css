@@ -22,7 +22,7 @@
   position: relative;
   display: inline-block;
   height: 100%;
-  z-index: 4;
+  z-index: var(--z-index-media-overlay, 4);
 }
 
 .modal-img-link .consonant-play-btn {

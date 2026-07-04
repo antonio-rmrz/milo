@@ -160,7 +160,7 @@
 .section.sticky-top {
   position: sticky;
   top: 57px;
-  z-index: 4;
+  z-index: var(--z-index-sticky-ribbon, 5);
   background-color: var(--color-white);
 }
 
