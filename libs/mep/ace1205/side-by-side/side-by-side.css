@@ -131,3 +131,10 @@
     }
   }
 }
+
+:root:has(meta[name="foundation"][content="c2"]) {
+  .side-by-side button.play-pause-button:focus-visible {
+    outline: var(--s2a-border-width-2) solid var(--s2a-color-focus-ring-default);
+    outline-offset: var(--s2a-border-width-2);
+  }
+}

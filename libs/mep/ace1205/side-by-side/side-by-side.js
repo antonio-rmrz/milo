@@ -76,4 +76,10 @@ function decorate(block) {
 
 export default function init(el) {
   decorateViewportContent(el, decorate);
+  // WCAG 2.4.11: the play/pause control can sit off-screen mid card transition;
+  // delegate on the block since the control is injected by shared video decoration
+  el.addEventListener('focusin', (e) => {
+    const control = e.target.closest('.pause-play-wrapper, .play-pause-button');
+    control?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  });
 }
