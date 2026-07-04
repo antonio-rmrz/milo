@@ -1,6 +1,9 @@
 /* eslint-disable no-console */
 const BOT_REGEX = /GoogleBot|Google-InspectionTool|BingBot|PerplexityBot|Perplexity-User|ClaudeBot|Claude-User|Claude-SearchBot|Tokowaka-AI|ChatGPT-User|GPTBot|OAI-SearchBot|AdobeEdgeOptimize-AI/i;
 export const isBot = () => BOT_REGEX.test(navigator.userAgent);
+// Uses window.screen.width (physical display) on purpose: resizing the window
+// or the DevTools viewport does not change it.
+export const isLargeDisplay = () => window.screen.width > 1920;
 
 const MILO_TEMPLATES = [
   '404',
@@ -2744,6 +2747,11 @@ export async function loadArea(area = document) {
     areaBlocks.forEach((block) => {
       if (!block.className.includes('metadata')) block.dataset.block = '';
     });
+  }
+
+  // large-display-images: 'on' — serve larger image renditions on screens wider than 1920px.
+  if (getMetadata('large-display-images') === 'on' && isLargeDisplay()) {
+    import('../features/large-display/large-display.js').then((module) => module.default(area));
   }
 
   const currentHash = window.location.hash;
