@@ -10,10 +10,12 @@ import {
   getCardMetadata,
   getCaasProps,
   getFloodgateColorFromHost,
+  isLanguageFirstAutoHost,
   loadCaasTags,
   postDataToCaaS,
   getConfig,
   setConfig,
+  syncLanguageFirstAutoUI,
 } from './send-utils.js';
 import { getGrayboxExperienceId, initBulkPublisherLingoMapping } from '../../libs/blocks/caas/utils.js';
 import comEnterpriseToCaasTagMap from './comEnterpriseToCaasTagMap.js';
@@ -456,6 +458,7 @@ presetSelector.addEventListener('change', () => {
 
   loadFromLS();
   checkCaasEnv();
+  syncLanguageFirstAutoUI();
 });
 
 const clearResultsButton = document.querySelector('.clear-results');
@@ -630,7 +633,10 @@ helpButtons.forEach((btn) => {
             <tt> - https://www.adobe.com/en/apac/news/2025/05/08/adobe-announces-new-features-for-adobe-stock.html will be published as en-apac</tt><br>
             <tt> - https://www.adobe.com/fr/news/2025/05/08/adobe-announces-new-features-for-adobe-stock.html will be published as fr-xx  </tt><br>
             <tt> - https://www.adobe.com/de/news/2025/05/08/adobe-announces-new-features-for-adobe-stock.html will be published as de-xx</tt><br>
-          </p>`);
+          </p>
+          <p>For hosts that are live with language-first localization (currently
+          <tt>business.adobe.com</tt> and <tt>business.stage.adobe.com</tt>) this option is
+          applied automatically and the checkbox is locked.</p>`);
         break;
       default:
         showAlert(`<p><b>Help</b><p>Help for "${el}" is on its way! Stay tuned.</p>`);
@@ -659,7 +665,12 @@ const init = async () => {
   await loadCaasTags();
   loadFromLS();
   checkCaasEnv();
+  syncLanguageFirstAutoUI();
   checkUserStatus();
+
+  document.getElementById('host').addEventListener('input', () => {
+    syncLanguageFirstAutoUI();
+  });
 
   window.addEventListener('beforeunload', () => {
     FIELDS.forEach((field) => {
@@ -687,7 +698,10 @@ const init = async () => {
       dryRun: document.getElementById('dryRun').checked,
       useHtml: document.getElementById('useHtml').checked,
       usePreview: document.getElementById('usePreview').checked,
-      languageFirst: document.getElementById('languageFirst').checked,
+      // Language-first is applied automatically for hosts that are live with
+      // it (MWPW-194951); the checkbox only drives the remaining hosts.
+      languageFirst: isLanguageFirstAutoHost(document.getElementById('host').value)
+        || document.getElementById('languageFirst').checked,
     });
     bulkPublish();
   });

@@ -1,6 +1,7 @@
 import { expect } from '@esm-bundle/chai';
 import { readFile } from '@web/test-runner-commands';
 import { getGrayboxExperienceId } from '../../../libs/blocks/caas/utils.js';
+import { isLanguageFirstAutoHost, syncLanguageFirstAutoUI } from '../../../tools/send-to-caas/send-utils.js';
 
 // Mock the DOM environment
 document.body.innerHTML = await readFile({ path: './mocks/body.html' });
@@ -100,6 +101,96 @@ describe('Bulk Publish to CaaS - Graybox Experience ID Integration', () => {
         const result = getGrayboxExperienceId(host, '');
         expect(result).to.equal(expected, `Failed for host: ${host}`);
       });
+    });
+  });
+});
+
+describe('Language-First Localization auto-detection (MWPW-194951)', () => {
+  describe('isLanguageFirstAutoHost', () => {
+    it('should return true for BACOM prod and stage hosts', () => {
+      expect(isLanguageFirstAutoHost('business.adobe.com')).to.be.true;
+      expect(isLanguageFirstAutoHost('business.stage.adobe.com')).to.be.true;
+    });
+
+    it('should normalize scheme, casing, whitespace and paths', () => {
+      expect(isLanguageFirstAutoHost(' https://Business.Adobe.com/fr/resources ')).to.be.true;
+      expect(isLanguageFirstAutoHost('http://business.stage.adobe.com/')).to.be.true;
+    });
+
+    it('should return false for out-of-scope hosts', () => {
+      const hosts = [
+        'www.adobe.com',
+        'milo.adobe.com',
+        'news.adobe.com',
+        'blog.adobe.com',
+        'mybusiness.adobe.com',
+        'example.com',
+      ];
+      hosts.forEach((host) => {
+        expect(isLanguageFirstAutoHost(host)).to.equal(false, `Failed for host: ${host}`);
+      });
+    });
+
+    it('should return false for empty or missing host', () => {
+      expect(isLanguageFirstAutoHost('')).to.be.false;
+      expect(isLanguageFirstAutoHost(undefined)).to.be.false;
+    });
+
+    it('should return false when the lfl=off override is present', () => {
+      expect(isLanguageFirstAutoHost('business.adobe.com', '?lfl=off')).to.be.false;
+    });
+  });
+
+  describe('syncLanguageFirstAutoUI', () => {
+    let container;
+
+    const setup = (host, checked = false) => {
+      container = document.createElement('div');
+      container.innerHTML = `
+        <input id="host" value="${host}" />
+        <div id="language-first" class="field checkbox">
+          <input type="checkbox" id="languageFirst" name="languageFirst" ${checked ? 'checked' : ''} />
+        </div>`;
+      document.body.appendChild(container);
+      return {
+        hostEl: container.querySelector('#host'),
+        checkbox: container.querySelector('#languageFirst'),
+        wrapper: container.querySelector('#language-first'),
+      };
+    };
+
+    afterEach(() => {
+      container?.remove();
+      container = null;
+    });
+
+    it('should check and lock the checkbox for auto-applied hosts', () => {
+      const { checkbox, wrapper } = setup('business.adobe.com');
+      syncLanguageFirstAutoUI();
+      expect(checkbox.checked).to.be.true;
+      expect(checkbox.disabled).to.be.true;
+      expect(wrapper.classList.contains('lang-first-auto')).to.be.true;
+    });
+
+    it('should leave the checkbox interactive and untouched for other hosts', () => {
+      const { checkbox, wrapper } = setup('milo.adobe.com', true);
+      syncLanguageFirstAutoUI();
+      expect(checkbox.checked).to.be.true;
+      expect(checkbox.disabled).to.be.false;
+      expect(wrapper.classList.contains('lang-first-auto')).to.be.false;
+    });
+
+    it('should restore the manual state when the host changes away from an auto host', () => {
+      const { hostEl, checkbox, wrapper } = setup('business.adobe.com');
+      syncLanguageFirstAutoUI();
+      expect(checkbox.checked).to.be.true;
+      expect(checkbox.disabled).to.be.true;
+
+      hostEl.value = 'milo.adobe.com';
+      syncLanguageFirstAutoUI();
+      expect(checkbox.checked).to.be.false;
+      expect(checkbox.disabled).to.be.false;
+      expect(wrapper.classList.contains('lang-first-auto')).to.be.false;
     });
   });
 });

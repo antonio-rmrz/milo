@@ -311,6 +311,50 @@ const isPagePublished = async () => {
   return false;
 };
 
+// Content hosts that are live with Language-First Localization (Project Lingo).
+// For these hosts the bulk publisher applies the languageFirst option
+// automatically (MWPW-194951); the per-locale mapping is still resolved at
+// publish time from lingo-site-mapping.json, so locales outside the Lingo
+// model keep their regular geo mapping. Extend this list as more hosts go
+// live with Lingo.
+const LANG_FIRST_AUTO_HOSTS = ['business.adobe.com', 'business.stage.adobe.com'];
+
+/**
+ * Returns true when Language-First Localization is applied automatically for
+ * the given content host. Scoped to BACOM only for now; all other hosts keep
+ * the manual checkbox. Append ?lfl=off to the tool URL to bypass automation.
+ * @param {string} host - content host as entered in the tool, e.g. 'business.adobe.com'
+ * @param {string} [search] - query string, defaults to the tool page's own
+ * @returns {boolean}
+ */
+export function isLanguageFirstAutoHost(host, search = window.location.search) {
+  if (new URLSearchParams(search).get('lfl') === 'off') return false;
+  const hostname = host?.trim().toLowerCase().replace(/^https?:\/\//, '').split('/')[0];
+  return LANG_FIRST_AUTO_HOSTS.includes(hostname);
+}
+
+/**
+ * Syncs the Language First checkbox with the host field: for auto-applied
+ * hosts it is forced on and locked; otherwise the operator's last manual
+ * choice is restored and the checkbox stays interactive.
+ * @param {Document} [doc]
+ */
+export function syncLanguageFirstAutoUI(doc = document) {
+  const checkbox = doc.getElementById('languageFirst');
+  if (!checkbox) return;
+  const auto = isLanguageFirstAutoHost(doc.getElementById('host')?.value);
+  if (auto) {
+    if (!checkbox.disabled) checkbox.dataset.manualChecked = String(checkbox.checked);
+    checkbox.checked = true;
+    checkbox.disabled = true;
+  } else if (checkbox.disabled) {
+    checkbox.checked = checkbox.dataset.manualChecked === 'true';
+    delete checkbox.dataset.manualChecked;
+    checkbox.disabled = false;
+  }
+  doc.getElementById('language-first')?.classList.toggle('lang-first-auto', auto);
+}
+
 const MAX_LANG_FIRST_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
 

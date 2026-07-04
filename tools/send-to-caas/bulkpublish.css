@@ -367,6 +367,18 @@ span.help:hover {
   color: #fff;
 }
 
+#language-first .lang-first-auto-note {
+  display: none;
+  margin-left: 6px;
+  color: #999;
+  font-size: 12px;
+  font-style: italic;
+}
+
+#language-first.lang-first-auto .lang-first-auto-note {
+  display: inline-block;
+}
+
 .hidden {
   display: none;
 }
