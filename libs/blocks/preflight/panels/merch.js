@@ -6,6 +6,17 @@ const masFieldsMultipleFragmentWarnings = signal([]);
 const unpublishedFragments = signal([]);
 const loading = signal(true);
 
+export function getBadgeCounts() {
+  const failedCount = wcsElements.value.filter((elem) => elem.urlStatus === 'error'
+    || elem.promoCodeStatus === 'expired'
+    || elem.promoCodeStatus === 'not-found').length;
+  const undeterminedCount = wcsElements.value.filter((elem) => elem.urlStatus === 'undetermined').length;
+  return {
+    errors: failedCount + unpublishedFragments.value.length,
+    warnings: undeterminedCount + masFieldsMultipleFragmentWarnings.value.length,
+  };
+}
+
 const MAS_UNPUBLISHED_HIGHLIGHT = 'preflight-mas-unpublished';
 
 const ALLOWED_MAS_HOSTS = ['mas.adobe.com'];

@@ -13,25 +13,37 @@ const fragmentsResult = signal({ icon: 'purple', title: 'Fragments', description
 const personalizationResult = signal({ icon: 'purple', title: 'Personalization', description: 'Checking...' });
 const placeholdersResult = signal({ icon: 'purple', title: 'Placeholders', description: 'Checking...' });
 const iconsResult = signal({ icon: 'purple', title: 'Icons', description: 'Checking...' });
+const lcpEntry = signal(null);
+
+const resultSignals = [
+  lcpElResult,
+  singleBlockResult,
+  imageSizeResult,
+  videoPosterResult,
+  fragmentsResult,
+  personalizationResult,
+  placeholdersResult,
+  iconsResult,
+];
+
+const ICON_TO_BADGE = { red: 'errors', orange: 'warnings' };
+
+export function getBadgeCounts() {
+  return resultSignals.reduce((counts, result) => {
+    const key = ICON_TO_BADGE[result.value.icon];
+    if (key) counts[key] += 1;
+    return counts;
+  }, { errors: 0, warnings: 0 });
+}
 
 /**
  * Runs performance checks and updates signals with the results.
  */
 async function getResults() {
-  const signals = [
-    lcpElResult,
-    singleBlockResult,
-    imageSizeResult,
-    videoPosterResult,
-    fragmentsResult,
-    personalizationResult,
-    placeholdersResult,
-    iconsResult,
-  ];
   const checks = runChecks(window.location.pathname, document);
 
   const checkPromises = checks.map((resultOrPromise, index) => {
-    const signalResult = signals[index];
+    const signalResult = resultSignals[index];
     return Promise.resolve(resultOrPromise)
       .then((result) => {
         const icon = STATUS_TO_ICON_MAP[result.status] ?? 'orange';
@@ -73,8 +85,9 @@ function PerformanceItem({ icon, title, description }) {
 let clonedLcpSection;
 async function highlightElement(event) {
   const lcp = await getLcpEntry(window.location.pathname, document);
-  if (!lcp) return;
+  if (!lcp?.element) return;
   const lcpSection = lcp.element.closest('.section');
+  if (!lcpSection) return;
   const tooltip = document.querySelector('.lcp-tooltip-modal');
   const { offsetHeight, offsetWidth } = lcpSection;
   const scaleFactor = Math.min(500 / offsetWidth, 500 / offsetHeight);
@@ -114,6 +127,9 @@ const removeHighlight = () => {
 export default function Panel() {
   useEffect(() => {
     getResults();
+    getLcpEntry(window.location.pathname, document).then((lcp) => {
+      lcpEntry.value = lcp;
+    });
   }, []);
 
   return html`
@@ -131,11 +147,13 @@ export default function Panel() {
         <${PerformanceItem} ...${iconsResult.value} />
       </div>
       <div>Unsure on how to get this page fully into the green? Check out the <a class="performance-guidelines" href="https://milo.adobe.com/docs/authoring/performance/" target="_blank">Milo Performance Guidelines</a>.</div>
-      <div> 
-        <span class="performance-element-preview" onMouseEnter=${highlightElement} onMouseLeave=${removeHighlight}>
-          Highlight the found LCP section
-        </span> 
-      </div>
+      ${lcpEntry.value?.element && html`
+        <div>
+          <span class="performance-element-preview" onMouseEnter=${highlightElement} onMouseLeave=${removeHighlight}>
+            Highlight the found LCP section
+          </span>
+        </div>
+      `}
       <div class="lcp-tooltip-modal"></div>
     </div>
   `;

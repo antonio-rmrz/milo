@@ -2,6 +2,7 @@ import { html, signal, useEffect } from '../../../deps/htm-preact.js';
 import { createTag } from '../../../utils/utils.js';
 
 const martechBlock = signal(null);
+const martechStrings = signal(null);
 const copiedTimeout = signal(null);
 const btnText = signal('Copy Table');
 
@@ -30,12 +31,15 @@ async function checkMartechMeta() {
       if (str) acc.push(str);
       return acc;
     }, []);
-  martechBlock.value = getTable(new Set(strings));
+  const uniqueStrings = new Set(strings);
+  // The clipboard payload keeps its Word-friendly format; only the
+  // rendered table below is redesigned.
+  martechBlock.value = getTable(uniqueStrings);
+  martechStrings.value = [...uniqueStrings];
 }
 
 function copyTable() {
   try {
-    /* global ClipboardItem */
     const clipboardData = [new ClipboardItem({ 'text/html': new Blob([martechBlock.value], { type: 'text/html' }) })];
     navigator.clipboard.write(clipboardData);
     btnText.value = '✔ Copied!';
@@ -52,12 +56,31 @@ function copyTable() {
 
 export default function Martech() {
   useEffect(() => { checkMartechMeta(); }, []);
+  const strings = martechStrings.value;
 
   return html`
   <div class="access-columns martech">
-    ${martechBlock.value && html`
-      <button class="preflight-action" onclick=${copyTable}>${btnText.value}</button>
-      <div dangerouslySetInnerHTML="${{ __html: martechBlock.value }}"></div>
+    ${strings && html`
+      <div class="preflight-martech-toolbar">
+        <p class="preflight-martech-count">${strings.length} string${strings.length === 1 ? '' : 's'} found</p>
+        <button class="preflight-action" onclick=${copyTable}>${btnText.value}</button>
+      </div>
+      <table class="preflight-martech-table">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Martech metadata</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${strings.map((str, idx) => html`
+            <tr key=${str}>
+              <td>${idx + 1}</td>
+              <td>${str}</td>
+            </tr>
+          `)}
+        </tbody>
+      </table>
     `}
   </div>`;
 }

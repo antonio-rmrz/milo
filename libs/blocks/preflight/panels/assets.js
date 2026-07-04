@@ -2,6 +2,7 @@ import { html, signal, useEffect } from '../../../deps/htm-preact.js';
 import { STATUS } from '../checks/constants.js';
 import { getPreflightResults } from '../checks/preflightApi.js';
 import { isViewportTooSmall } from '../checks/assets.js';
+import { createTag } from '../../../utils/utils.js';
 
 // Define signals for check results and viewport status
 const assetDimensionsResult = signal({
@@ -13,6 +14,13 @@ const assetsWithMatch = signal([]);
 const criticalAssetFailures = signal([]);
 const warningAssetFailures = signal([]);
 const viewportTooSmall = signal(isViewportTooSmall());
+
+export function getBadgeCounts() {
+  return {
+    errors: criticalAssetFailures.value.length,
+    warnings: warningAssetFailures.value.length,
+  };
+}
 
 /**
  * Runs asset checks and updates signals with the results.
@@ -49,6 +57,54 @@ async function getResults() {
 }
 
 /**
+ * Re-opens the preflight modal, preferring the sidekick event the page-level
+ * plugin already listens for; falls back to building the modal directly.
+ */
+async function reopenPreflight() {
+  const sidekick = document.querySelector('aem-sidekick, helix-sidekick');
+  if (sidekick) {
+    sidekick.dispatchEvent(new CustomEvent('custom:preflight', { bubbles: true }));
+    return;
+  }
+  const [{ getModal }, { default: initPreflight }] = await Promise.all([
+    import('../../modal/modal.js'),
+    import('../preflight.js'),
+  ]);
+  const content = createTag('div', { class: 'preflight' });
+  await initPreflight(content);
+  getModal(null, { id: 'preflight', content, closeEvent: 'closeModal' });
+}
+
+/**
+ * Shows the 'Back to Preflight' popover pinned to the top-left of the screen.
+ */
+function showBackToPreflight() {
+  document.querySelector('.preflight-back-popover')?.remove();
+  const button = createTag('button', { type: 'button' }, 'Back to Preflight');
+  const popover = createTag('div', { class: 'preflight-back-popover' }, button);
+  button.addEventListener('click', () => {
+    popover.remove();
+    reopenPreflight();
+  });
+  document.body.append(popover);
+}
+
+/**
+ * Closes the preflight modal, scrolls the asset into view, and offers a way
+ * back via the 'Back to Preflight' popover.
+ */
+export async function navigateToAsset(assetEl) {
+  if (!assetEl?.scrollIntoView) return;
+  const dialog = document.querySelector('.dialog-modal#preflight');
+  if (dialog) {
+    const { closeModal } = await import('../../modal/modal.js');
+    await closeModal(dialog);
+  }
+  assetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  showBackToPreflight();
+}
+
+/**
  * Component to display a single asset check result.
  */
 function AssetsItem({ title, description }) {
@@ -57,6 +113,60 @@ function AssetsItem({ title, description }) {
       <div class="assets-item-text">
         <p class="assets-item-title">${title}</p>
         <p class="assets-item-description">${description}</p>
+      </div>
+    </div>`;
+}
+
+/**
+ * Single metric row inside an asset card.
+ */
+function AssetMetric({ label, value, isCritical }) {
+  return html`
+    <div class="asset-metric">
+      <span class="asset-metric-label">${label}</span>
+      <span class="asset-metric-value${isCritical ? ' is-critical' : ''}">${value}</span>
+    </div>`;
+}
+
+/**
+ * Compact asset card with thumbnail, metric rows, and click-to-navigate.
+ */
+function AssetCard({ asset, isCritical }) {
+  const canNavigate = !!asset.asset?.isConnected;
+  const title = (isCritical && 'Above-the-fold asset with critical dimension issues')
+    || (canNavigate && 'Click to locate this asset on the page')
+    || '';
+
+  const handleClick = (e) => {
+    if (e.target.closest('video, iframe, a')) return;
+    navigateToAsset(asset.asset);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    navigateToAsset(asset.asset);
+  };
+
+  return html`
+    <div
+      class="assets-image-grid-item${isCritical ? ' above-fold-critical' : ''}"
+      title=${title}
+      role=${canNavigate ? 'button' : undefined}
+      tabindex=${canNavigate ? 0 : undefined}
+      onClick=${canNavigate ? handleClick : undefined}
+      onKeyDown=${canNavigate ? handleKeyDown : undefined}>
+      ${asset.type === 'image' && html`<img src=${asset.src} alt="" />`}
+      ${asset.type === 'video' && html`<video controls src=${asset.src} />`}
+      ${asset.type === 'mpc' && html`<iframe src=${asset.src} title="Video preview" />`}
+      <div class="assets-image-grid-item-text">
+        <${AssetMetric} label="Factor" value=${asset.roundedFactor} isCritical=${isCritical} />
+        <${AssetMetric} label="Upload size" value=${asset.naturalDimensions} />
+        <${AssetMetric} label="Display size" value=${asset.displayDimensions} />
+        ${asset.hasMismatch && html`<${AssetMetric} label="Recommended" value=${asset.recommendedDimensions} />`}
+        <${AssetMetric} label="Type" value=${asset.typeLabel} />
+        ${asset.notes && html`<p class="asset-note">${asset.notes}</p>`}
+        ${isCritical && html`<span class="preflight-chip preflight-chip-error">Critical</span>`}
       </div>
     </div>`;
 }
@@ -81,26 +191,7 @@ function AssetGroup({ group }) {
 
     ${!viewportTooSmall.value && assetArray.value.length > 0 && html`
     <div class='assets-image-grid'>
-      ${assetArray.value.map((asset) => {
-    const isAboveFoldWithMismatch = isCriticalGroup;
-    const itemClass = isAboveFoldWithMismatch ? 'assets-image-grid-item above-fold-critical' : 'assets-image-grid-item';
-
-    return html`
-      <div class='${itemClass}' title='${isAboveFoldWithMismatch ? 'Above-the-fold asset with critical dimension issues' : ''}'>
-        ${asset.type === 'image' && html`<img src='${asset.src}' />`}
-        ${asset.type === 'video' && html`<video controls src='${asset.src}' />`}
-        ${asset.type === 'mpc' && html`<iframe src='${asset.src}' />`}
-        <div class='assets-image-grid-item-text'>
-          <span>Factor: ${asset.roundedFactor}</span>
-          <span>Upload size: ${asset.naturalDimensions}</span>
-          <span>Display size: ${asset.displayDimensions}</span>
-          ${asset.hasMismatch && html`<span>Recommended size: ${asset.recommendedDimensions}</span>`}
-          <span>Type: ${asset.typeLabel}</span>
-          ${asset.notes && html`<span><strong>Notes:</strong> ${asset.notes}</span>`}
-          ${isAboveFoldWithMismatch && html`<span class="above-fold-notice"><strong>⚠️ CRITICAL:</strong></span>`}
-        </div>
-      </div>`;
-  })}
+      ${assetArray.value.map((asset) => html`<${AssetCard} asset=${asset} isCritical=${isCriticalGroup} />`)}
     </div>`}
 
     ${!viewportTooSmall.value && assetArray.value.length === 0 && html`

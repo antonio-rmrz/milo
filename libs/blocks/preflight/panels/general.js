@@ -26,8 +26,28 @@ const regionSelectorResult = signal({ icon: 'purple', title: STRUCTURE_TITLES.re
 const georoutingResult = signal({ icon: 'purple', title: STRUCTURE_TITLES.georouting, description: 'Checking...' });
 const breadcrumbsResult = signal({ icon: 'purple', title: STRUCTURE_TITLES.breadcrumbs, description: 'Checking...' });
 const localizationResult = signal({ icon: 'purple', title: 'Links', description: 'Checking...' });
-const localizationIssues = signal([]);
+export const localizationIssues = signal([]);
 const localizationClosed = signal(false);
+
+const ICON_TO_BADGE = { red: 'errors', orange: 'warnings' };
+
+export function getBadgeCounts() {
+  const counts = { errors: 0, warnings: 0 };
+  [navResult, footerResult, regionSelectorResult, georoutingResult, breadcrumbsResult]
+    .forEach((result) => {
+      const key = ICON_TO_BADGE[result.value.icon];
+      if (key) counts[key] += 1;
+    });
+  // Each localization faulty link counts as an issue in the General badge.
+  const faultyLinks = localizationIssues.value.length;
+  if (faultyLinks > 0) {
+    counts.errors += faultyLinks;
+  } else {
+    const key = ICON_TO_BADGE[localizationResult.value.icon];
+    if (key) counts[key] += 1;
+  }
+  return counts;
+}
 
 async function getStructureResults() {
   const signals = [
@@ -324,7 +344,7 @@ function LocalizationIssuesList({ issues }) {
         </div>
         <div class=preflight-group-items>
           ${issues.map((v) => html`
-            <div class="preflight-group-row preflight-group-detail">
+            <div class="preflight-group-row preflight-group-detail preflight-loc-row">
               <p><a href=${v.url} target=_blank>${v.url}</a></p>
               <p>${v.isLocalized ? 'Yes' : 'No'}</p>
               <p>${v.usStatus}</p>

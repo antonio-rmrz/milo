@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!--
+  Dev-only fixture: renders the preflight modal in isolation to capture visual
+  evidence at the Milo breakpoints (resize the viewport to 375 / 900 / 1200px).
+  Not registered as a block and not linked from any authored page.
+  Serve the repo (e.g. `npm run libs`) and open:
+  http://localhost:6456/libs/blocks/preflight/preflight-test.html
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Preflight fixture</title>
+  <link rel="stylesheet" href="../modal/modal.css">
+  <link rel="stylesheet" href="./preflight.css">
+  <style>
+    :root { --body-font-family: 'Trebuchet MS', sans-serif; }
+    body { margin: 0; font-family: var(--body-font-family); }
+    main { padding: 40px; }
+    .modal-curtain { position: fixed; inset: 0; background: rgb(0 0 0 / 40%); z-index: 100; }
+    .dialog-modal#preflight { z-index: 101; }
+    .milo-preflight-overlay { position: fixed; bottom: 16px; right: 16px; padding: 12px 16px; background: #222; color: #fff; border-radius: 8px; z-index: 99; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="section">
+      <h1>Preflight fixture page</h1>
+      <p>Host-page content used by the checks. <a href="/drafts/example">Internal link</a></p>
+      <picture>
+        <img src="./img/preflight-bg.png" alt="Sample" width="600" height="300">
+      </picture>
+    </div>
+  </main>
+  <div class="milo-preflight-overlay">Fake page notification (suppressed while preflight is open)</div>
+  <script type="module">
+    import { setConfig } from '../../utils/utils.js';
+    import init from './preflight.js';
+
+    window.lana = window.lana || { log: () => {} };
+    setConfig({ georouting: { enabled: 'off' } });
+
+    const curtain = document.createElement('div');
+    curtain.className = 'modal-curtain is-open';
+    const dialog = document.createElement('div');
+    dialog.className = 'dialog-modal';
+    dialog.id = 'preflight';
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+    const block = document.createElement('div');
+    block.className = 'preflight';
+    dialog.append(block);
+    await init(block);
+    document.body.append(curtain, dialog);
+  </script>
+</body>
+</html>

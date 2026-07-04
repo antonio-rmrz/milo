@@ -70,6 +70,14 @@ const signals = [
   linksResult,
 ];
 
+export function getBadgeCounts() {
+  return signals.reduce((counts, result) => {
+    if (result.value.icon === fail) counts.errors += 1;
+    if (result.value.icon === limbo) counts.warnings += 1;
+    return counts;
+  }, { errors: 0, warnings: 0 });
+}
+
 function toUIFormat(result, signalResult) {
   let icon;
   if (result.status === STATUS.PASS) {
