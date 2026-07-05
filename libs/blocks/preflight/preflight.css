@@ -1349,6 +1349,20 @@ img:hover ~ .asset-meta,
   line-height: 2.5;
 }
 
+.dialog-modal#preflight button.dialog-close {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.dialog-modal#preflight button.dialog-close:focus-visible {
+  outline: 2px solid var(--color-focus-ring, #378ef0);
+  outline-offset: 2px;
+}
+
 .dialog-modal#preflight button.dialog-close svg {
   display: block;
 }
