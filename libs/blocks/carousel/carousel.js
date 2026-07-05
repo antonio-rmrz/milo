@@ -38,6 +38,26 @@ const isDesktop = window.matchMedia('(min-width: 900px)');
 const isMobileVp = window.matchMedia('(max-width: 599px)');
 const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+// WCAG 2.4.11: ensure a focused carousel control is not hidden by an overflow container.
+export function ensureVisible(el) {
+  el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' });
+  let ancestor = el.parentElement;
+  while (ancestor && ancestor !== document.body) {
+    const { overflow, overflowY } = window.getComputedStyle(ancestor);
+    if (overflow === 'hidden' || overflow === 'clip' || overflowY === 'hidden' || overflowY === 'clip') {
+      const elRect = el.getBoundingClientRect();
+      const ancestorRect = ancestor.getBoundingClientRect();
+      if (elRect.bottom < ancestorRect.top || elRect.top > ancestorRect.bottom) {
+        ancestor.scrollTop += elRect.top < ancestorRect.top
+          ? elRect.top - ancestorRect.top
+          : elRect.bottom - ancestorRect.bottom;
+      }
+      break;
+    }
+    ancestor = ancestor.parentElement;
+  }
+}
+
 function getPreviousAriaLabel(currentIndex, totalSlides) {
   return currentIndex === 0 && totalSlides > 0
     ? `Previous slide, slide ${currentIndex + 1} of ${totalSlides}`
@@ -818,4 +838,18 @@ export default function init(el) {
   }
 
   parentArea.addEventListener(MILO_EVENTS.DEFERRED, handleLateLoadingNavigation, true);
+
+  // WCAG 2.4.11: scroll any focused carousel control into view.
+  el.addEventListener('focusin', (event) => {
+    if (event.target.closest('.carousel-button-container, .lightbox-button')) {
+      ensureVisible(event.target);
+    }
+  });
+
+  slideContainer.addEventListener('transitionend', () => {
+    const active = document.activeElement;
+    if (active && el.contains(active) && active.closest('.carousel-button-container, .lightbox-button')) {
+      ensureVisible(active);
+    }
+  });
 }

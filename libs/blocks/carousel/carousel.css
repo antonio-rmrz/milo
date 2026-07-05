@@ -70,6 +70,13 @@
   min-width: auto;
 }
 
+/* --scroll-margin: override per-site to match the sticky nav height (default: 72px global-nav). */
+.carousel .carousel-button-container,
+.carousel .lightbox-button {
+  scroll-margin-top: var(--scroll-margin, var(--nav-height, 72px));
+  scroll-margin-bottom: var(--scroll-margin, var(--nav-height, 72px));
+}
+
 .carousel .carousel-button-container button {
   position: relative;
   padding: 0;

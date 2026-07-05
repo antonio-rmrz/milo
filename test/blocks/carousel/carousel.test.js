@@ -6,6 +6,7 @@ const {
   getSwipeDirection,
   getSwipeDistance,
   waitImgReady,
+  ensureVisible,
 } = await import('../../../libs/blocks/carousel/carousel.js');
 document.body.innerHTML = await readFile({ path: './mocks/body.html' });
 
@@ -624,5 +625,145 @@ describe('carousel disable-buttons deferred heights on desktop', () => {
     slides.forEach((slide) => {
       expect(slide.style.height).to.equal('');
     });
+  });
+});
+
+describe('WCAG 2.4.11: ensureVisible helper', () => {
+  it('calls scrollIntoView on the element', () => {
+    const el = document.createElement('button');
+    let scrollIntoViewCalled = false;
+    let scrollIntoViewArgs;
+    el.scrollIntoView = (args) => { scrollIntoViewCalled = true; scrollIntoViewArgs = args; };
+    document.body.appendChild(el);
+    ensureVisible(el);
+    el.remove();
+    expect(scrollIntoViewCalled).to.be.true;
+    expect(scrollIntoViewArgs.behavior).to.equal('instant');
+    expect(scrollIntoViewArgs.block).to.equal('nearest');
+  });
+
+  it('scrolls an overflow:hidden ancestor when the element is outside its bounds', () => {
+    const container = document.createElement('div');
+    container.style.overflow = 'hidden';
+    container.style.height = '200px';
+    container.style.position = 'relative';
+    const el = document.createElement('button');
+    el.scrollIntoView = () => {};
+    container.appendChild(el);
+    document.body.appendChild(container);
+
+    const origGetComputedStyle = window.getComputedStyle.bind(window);
+
+    window.getComputedStyle = (node) => {
+      if (node === container) return { overflow: 'hidden', overflowY: 'hidden' };
+      return origGetComputedStyle(node);
+    };
+
+    let ancestorScrolled = false;
+    const containerDescriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop');
+    Object.defineProperty(container, 'scrollTop', {
+      get: () => 0,
+      set: () => { ancestorScrolled = true; },
+      configurable: true,
+    });
+
+    el.getBoundingClientRect = () => ({ top: -50, bottom: -10, left: 0, right: 100 });
+    container.getBoundingClientRect = () => ({ top: 0, bottom: 200, left: 0, right: 100 });
+
+    ensureVisible(el);
+
+    window.getComputedStyle = origGetComputedStyle;
+    if (containerDescriptor) Object.defineProperty(container, 'scrollTop', containerDescriptor);
+    container.remove();
+
+    expect(ancestorScrolled).to.be.true;
+  });
+});
+
+describe('WCAG 2.4.11: focusin scrolls carousel controls into view', () => {
+  let fixtureRoot;
+
+  beforeEach(() => {
+    const html = multiSectionCarouselFixture({
+      carouselClass: 'a11y-isolated',
+      blockTitle: 'A11y test',
+      companions: [{ h2: 'S1' }, { h2: 'S2' }],
+    });
+    fixtureRoot = appendCarouselFixture(html);
+    init(fixtureRoot.querySelector('.carousel'));
+  });
+
+  afterEach(() => {
+    fixtureRoot?.remove();
+  });
+
+  it('focusin on next button calls scrollIntoView', () => {
+    const el = fixtureRoot.querySelector('.a11y-isolated');
+    const next = el.querySelector('.carousel-next');
+    let scrollIntoViewCalled = false;
+    next.scrollIntoView = () => { scrollIntoViewCalled = true; };
+
+    next.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+
+    expect(scrollIntoViewCalled).to.be.true;
+  });
+
+  it('focusin on previous button calls scrollIntoView', () => {
+    const el = fixtureRoot.querySelector('.a11y-isolated');
+    const prev = el.querySelector('.carousel-previous');
+    let scrollIntoViewCalled = false;
+    prev.scrollIntoView = () => { scrollIntoViewCalled = true; };
+
+    prev.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+
+    expect(scrollIntoViewCalled).to.be.true;
+  });
+});
+
+describe('WCAG 2.4.11: transitionend re-checks focused control visibility', () => {
+  let fixtureRoot;
+
+  beforeEach(() => {
+    const html = multiSectionCarouselFixture({
+      carouselClass: 'transend-isolated',
+      blockTitle: 'Transend test',
+      companions: [{ h2: 'T1' }, { h2: 'T2' }],
+    });
+    fixtureRoot = appendCarouselFixture(html);
+    init(fixtureRoot.querySelector('.carousel'));
+  });
+
+  afterEach(() => {
+    fixtureRoot?.remove();
+  });
+
+  it('transitionend calls scrollIntoView when a carousel button is focused', () => {
+    const el = fixtureRoot.querySelector('.transend-isolated');
+    const slideContainer = el.querySelector('.carousel-slides');
+    const next = el.querySelector('.carousel-next');
+    let scrollIntoViewCalled = false;
+    next.scrollIntoView = () => { scrollIntoViewCalled = true; };
+    next.focus();
+
+    slideContainer.dispatchEvent(new Event('transitionend', { bubbles: false }));
+
+    expect(scrollIntoViewCalled).to.be.true;
+  });
+
+  it('transitionend does not call scrollIntoView when focus is outside the carousel', () => {
+    const el = fixtureRoot.querySelector('.transend-isolated');
+    const slideContainer = el.querySelector('.carousel-slides');
+    const next = el.querySelector('.carousel-next');
+    let scrollIntoViewCalled = false;
+    next.scrollIntoView = () => { scrollIntoViewCalled = true; };
+
+    const outside = document.createElement('button');
+    document.body.appendChild(outside);
+    outside.focus();
+
+    slideContainer.dispatchEvent(new Event('transitionend', { bubbles: false }));
+
+    outside.remove();
+    expect(scrollIntoViewCalled).to.be.false;
   });
 });
