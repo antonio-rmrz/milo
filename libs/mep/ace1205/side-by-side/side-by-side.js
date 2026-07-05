@@ -46,6 +46,13 @@ function replaceVideoIntersectionObserver(medias) {
   });
 }
 
+function ensurePlayPauseVisible(btn) {
+  const rect = btn.getBoundingClientRect();
+  const inView = rect.top >= 0 && rect.bottom <= window.innerHeight
+    && rect.left >= 0 && rect.right <= window.innerWidth;
+  if (!inView) btn.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' });
+}
+
 function decorate(block) {
   const [mediaRow, textRow] = block.children;
   if (!mediaRow || !textRow) return;
@@ -72,6 +79,10 @@ function decorate(block) {
     block.querySelector('.card-overlay')?.classList.add('dark');
   }
   replaceVideoIntersectionObserver(medias);
+
+  block.addEventListener('focus', (e) => {
+    if (e.target.classList.contains('play-pause-button')) ensurePlayPauseVisible(e.target);
+  }, true);
 }
 
 export default function init(el) {

@@ -33,6 +33,10 @@
     aspect-ratio: 33/37;
     border: var(--s2a-border-width-md) solid var(--s2a-color-transparent-white-12);
 
+    &:has(.play-pause-button:focus-visible) {
+      overflow: visible;
+    }
+
     &.dark {
       background-color: unset;
     }
@@ -54,6 +58,16 @@
     .video-container {
       border-radius: inherit;
       width: 100%;
+
+      .play-pause-button {
+        position: absolute;
+        z-index: 2;
+
+        &:focus-visible {
+          outline: 3px solid var(--s2a-color-focus-ring-default, #0265dc);
+          outline-offset: 2px;
+        }
+      }
     }
 
     .foreground {
