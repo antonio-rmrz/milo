@@ -3,6 +3,43 @@ import { STATUS } from '../checks/constants.js';
 import { getPreflightResults } from '../checks/preflightApi.js';
 import { isViewportTooSmall } from '../checks/assets.js';
 
+const backPopoverVisible = signal(false);
+
+function showBackPopover() {
+  backPopoverVisible.value = true;
+}
+
+function hideBackPopover() {
+  backPopoverVisible.value = false;
+}
+
+function BackPopover() {
+  if (!backPopoverVisible.value) return null;
+  function handleClick() {
+    hideBackPopover();
+    /* Re-open the preflight modal via the sidekick event */
+    const sk = document.querySelector('aem-sidekick, helix-sidekick');
+    if (sk) sk.dispatchEvent(new CustomEvent('custom:preflight'));
+  }
+  return html`
+    <div class=preflight-back-popover role=button tabIndex=0 onClick=${handleClick} onKeyDown=${(e) => e.key === 'Enter' && handleClick()}>
+      <span class=preflight-back-popover-arrow>←</span>
+      Back to Preflight
+    </div>`;
+}
+
+function navigateToAsset(asset) {
+  /* Dispatch closeModal to shut preflight, then scroll to element */
+  document.dispatchEvent(new CustomEvent('closeModal'));
+  setTimeout(() => {
+    const el = asset?.element;
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    showBackPopover();
+  }, 200);
+}
+
 // Define signals for check results and viewport status
 const assetDimensionsResult = signal({
   title: 'Asset Dimensions',
@@ -86,7 +123,13 @@ function AssetGroup({ group }) {
     const itemClass = isAboveFoldWithMismatch ? 'assets-image-grid-item above-fold-critical' : 'assets-image-grid-item';
 
     return html`
-      <div class='${itemClass}' title='${isAboveFoldWithMismatch ? 'Above-the-fold asset with critical dimension issues' : ''}'>
+      <div
+        class='${itemClass}'
+        title='${isAboveFoldWithMismatch ? 'Above-the-fold asset with critical dimension issues' : 'Click to navigate to asset'}'
+        role=button
+        tabIndex=0
+        onClick=${() => navigateToAsset(asset)}
+        onKeyDown=${(e) => e.key === 'Enter' && navigateToAsset(asset)}>
         ${asset.type === 'image' && html`<img src='${asset.src}' />`}
         ${asset.type === 'video' && html`<video controls src='${asset.src}' />`}
         ${asset.type === 'mpc' && html`<iframe src='${asset.src}' />`}
@@ -149,5 +192,6 @@ export default function Assets() {
       <${AssetsItem} ...${assetDimensionsResult.value} />
       ${groups.map((group) => html`<${AssetGroup} group=${group} />`)}
     </div>
+    <${BackPopover} />
   `;
 }
