@@ -29,7 +29,7 @@
     --parallax-stagger-index: 0.5;
 
     position: relative;
-    overflow: hidden;
+    overflow: clip;
     aspect-ratio: 33/37;
     border: var(--s2a-border-width-md) solid var(--s2a-color-transparent-white-12);
 
@@ -65,6 +65,10 @@
       gap: var(--s2a-spacing-2xs);
       max-width: 320px;
     }
+  }
+
+  .play-pause-button {
+    scroll-margin: 8px;
   }
 
   .card-stacked {

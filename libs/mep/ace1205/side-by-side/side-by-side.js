@@ -72,6 +72,12 @@ function decorate(block) {
     block.querySelector('.card-overlay')?.classList.add('dark');
   }
   replaceVideoIntersectionObserver(medias);
+
+  block.addEventListener('focus', (e) => {
+    if (e.target.classList.contains('play-pause-button')) {
+      e.target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+  }, true);
 }
 
 export default function init(el) {
