@@ -3048,6 +3048,56 @@ describe('Utils', () => {
     });
   });
 
+  describe('getCountry param resolution', () => {
+    const baseUrl = `${window.location.origin}${window.location.pathname}`;
+
+    afterEach(() => {
+      window.history.replaceState({}, '', baseUrl);
+      sessionStorage.removeItem('akamai');
+    });
+
+    it('country-only: ?country=sg resolves to sg', async () => {
+      window.history.pushState({}, '', `${baseUrl}?country=sg`);
+      const timestamp = Date.now();
+      const mod = await import(`../../libs/utils/utils.js?t=${timestamp}`);
+      const result = await mod.getCountry(true);
+      expect(result).to.equal('sg');
+    });
+
+    it('akamaiLocale-only: ?akamaiLocale=sg resolves to sg', async () => {
+      window.history.pushState({}, '', `${baseUrl}?akamaiLocale=sg`);
+      const timestamp = Date.now();
+      const mod = await import(`../../libs/utils/utils.js?t=${timestamp}`);
+      const result = await mod.getCountry(true);
+      expect(result).to.equal('sg');
+    });
+
+    it('both set: country wins over akamaiLocale', async () => {
+      window.history.pushState({}, '', `${baseUrl}?country=sg&akamaiLocale=us`);
+      const timestamp = Date.now();
+      const mod = await import(`../../libs/utils/utils.js?t=${timestamp}`);
+      const result = await mod.getCountry(true);
+      expect(result).to.equal('sg');
+    });
+
+    it('invalid country falls through to akamaiLocale', async () => {
+      window.history.pushState({}, '', `${baseUrl}?country=!!!&akamaiLocale=us`);
+      const timestamp = Date.now();
+      const mod = await import(`../../libs/utils/utils.js?t=${timestamp}`);
+      const result = await mod.getCountry(true);
+      expect(result).to.equal('us');
+    });
+
+    it('neither param: falls through to sessionStorage akamai', async () => {
+      window.history.pushState({}, '', baseUrl);
+      sessionStorage.setItem('akamai', 'ca');
+      const timestamp = Date.now();
+      const mod = await import(`../../libs/utils/utils.js?t=${timestamp}`);
+      const result = await mod.getCountry(true);
+      expect(result).to.equal('ca');
+    });
+  });
+
   describe('getCountry bot detection', () => {
     const originalUserAgent = navigator.userAgent;
     let savedFetch;

@@ -967,9 +967,11 @@ function setCountry() {
 export async function getCountry(skipFallback = false) {
   if (isBot()) return null;
 
-  const rawAkamai = PAGE_URL.searchParams.get('akamaiLocale');
-  const akamaiLocale = /^[a-zA-Z]{2,6}$/.test(rawAkamai) ? rawAkamai : null;
-  const country = akamaiLocale || sessionStorage.getItem('akamai');
+  const params = PAGE_URL.searchParams;
+  const validate = (v) => (/^[a-zA-Z]{2,6}$/.test(v) ? v : null);
+  const country = validate(params.get('country'))
+    || validate(params.get('akamaiLocale'))
+    || sessionStorage.getItem('akamai');
   if (country || skipFallback) return country?.toLowerCase();
 
   try {
