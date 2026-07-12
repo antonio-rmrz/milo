@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OPT-41963 — Acrobat Express Merchandising V2</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: 'Adobe Clean', adobe-clean, 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 40px 24px;
+      color: #2c2c2c;
+    }
+    h1 {
+      font-size: 14px;
+      color: #6e6e6e;
+      font-weight: 400;
+      margin: 0 0 24px;
+      text-align: center;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .pricing-cards {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .merch-card {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      padding: 28px 24px;
+      width: 280px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+    .merch-card .badge {
+      position: absolute;
+      top: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1473E6;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: 0 0 6px 6px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .merch-card.express .badge {
+      background: #E34850;
+    }
+    .merch-card .product-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+    .merch-card .card-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 8px;
+      line-height: 1.2;
+    }
+    .merch-card .card-subtitle {
+      font-size: 13px;
+      color: #6e6e6e;
+      margin: 0 0 16px;
+      line-height: 1.5;
+      flex: 1;
+    }
+    .merch-card .ai-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #FFF3E0;
+      color: #C63;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .merch-card .price {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0 0 4px;
+      color: #2c2c2c;
+    }
+    .merch-card .price-term {
+      font-size: 12px;
+      color: #6e6e6e;
+      margin: 0 0 20px;
+    }
+    .merch-card .cta-primary {
+      display: block;
+      background: #1473E6;
+      color: #fff;
+      text-align: center;
+      padding: 11px 20px;
+      border-radius: 20px;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      margin-bottom: 10px;
+      transition: background .15s;
+      daa-lh: "Acrobat Express|card-cta";
+    }
+    .merch-card .cta-primary:hover { background: #0d66d0; }
+    .merch-card.express .cta-primary { background: #E34850; }
+    .merch-card.express .cta-primary:hover { background: #c9252d; }
+    .merch-card .cta-secondary {
+      display: block;
+      color: #1473E6;
+      text-align: center;
+      font-size: 14px;
+      text-decoration: none;
+      padding: 6px;
+    }
+    .merch-card .features {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0 0;
+      font-size: 13px;
+      color: #444;
+    }
+    .merch-card .features li {
+      padding: 6px 0;
+      border-top: 1px solid #f0f0f0;
+      padding-left: 20px;
+      position: relative;
+    }
+    .merch-card .features li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: #1473E6;
+      font-weight: 700;
+    }
+    .merch-card.express .features li::before { color: #E34850; }
+    .section-label {
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+      margin: 40px 0 12px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    /* Acrobat product colours */
+    .icon-acrobat { background: #EB1000; }
+    .icon-express { background: #FF2BC2; }
+    .icon-studio  { background: #8338FF; }
+    @media (max-width: 600px) {
+      .pricing-cards { flex-direction: column; align-items: center; }
+      .merch-card { width: 100%; max-width: 340px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>OPT-41963 — Acrobat Express Merchandising V2 · Treatment variant</h1>
+
+  <div class="pricing-cards" daa-lh="Acrobat Pricing|pricing-cards">
+
+    <!-- Acrobat Pro card (control, unchanged) -->
+    <div class="merch-card" daa-lh="Acrobat Pro|merch-card">
+      <div class="product-icon icon-acrobat" aria-hidden="true"></div>
+      <div class="card-title">Acrobat Pro</div>
+      <div class="card-subtitle">
+        The complete PDF and e-signature solution for individuals.
+      </div>
+      <div class="price">US$23.99<span style="font-size:14px;font-weight:400">/mo</span></div>
+      <div class="price-term">per license, billed annually</div>
+      <a class="cta-primary" href="https://commerce.adobe.com/store/buy/acrobat/pro" daa-ll="Buy now|acrobat-pro-cta">Buy now</a>
+      <a class="cta-secondary" href="/acrobat/pro" daa-ll="Learn more|acrobat-pro-secondary">Learn more</a>
+      <ul class="features">
+        <li>Create, edit &amp; convert PDFs</li>
+        <li>E-sign &amp; collect signatures</li>
+        <li>AI Assistant included</li>
+        <li>Advanced security controls</li>
+      </ul>
+    </div>
+
+    <!-- Acrobat Express card (OPT-41963 treatment — new AI-first entry plan) -->
+    <div class="merch-card express" daa-lh="Acrobat Express|merch-card">
+      <div class="badge">New AI Plan</div>
+      <div class="product-icon icon-express" aria-hidden="true"></div>
+      <span class="ai-label">✦ AI-first</span>
+      <div class="card-title">Acrobat Express</div>
+      <div class="card-subtitle">
+        Create, sign, and share PDFs instantly — powered by Adobe AI.
+      </div>
+      <div class="price">US$9.99<span style="font-size:14px;font-weight:400">/mo</span></div>
+      <div class="price-term">per license, billed annually</div>
+      <a class="cta-primary" href="https://commerce.adobe.com/store/buy/acrobat/express" daa-ll="Get started|acrobat-express-cta">Get started</a>
+      <a class="cta-secondary" href="/acrobat/express" daa-ll="Learn more|acrobat-express-secondary">Learn more</a>
+      <ul class="features">
+        <li>AI-powered PDF creation</li>
+        <li>E-sign documents</li>
+        <li>Generative fill &amp; summarise</li>
+        <li>Export to Word, Excel</li>
+      </ul>
+    </div>
+
+    <!-- Acrobat Pro for Teams / Studio card (control, unchanged) -->
+    <div class="merch-card" daa-lh="Acrobat Studio|merch-card">
+      <div class="product-icon icon-studio" aria-hidden="true"></div>
+      <div class="card-title">Acrobat Pro for Teams</div>
+      <div class="card-subtitle">
+        Full PDF &amp; e-signature suite with admin controls for teams.
+      </div>
+      <div class="price">US$29.99<span style="font-size:14px;font-weight:400">/mo</span></div>
+      <div class="price-term">per license, billed annually</div>
+      <a class="cta-primary" href="https://commerce.adobe.com/store/buy/acrobat/teams" daa-ll="Buy now|acrobat-studio-cta">Buy now</a>
+      <a class="cta-secondary" href="/acrobat/teams" daa-ll="Learn more|acrobat-studio-secondary">Learn more</a>
+      <ul class="features">
+        <li>Everything in Acrobat Pro</li>
+        <li>Team license management</li>
+        <li>Advanced analytics</li>
+        <li>Priority support</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <p class="section-label">Experiment: OPT-41963 · Treatment variant active · US Individual &amp; DCT pages</p>
+</body>
+</html>

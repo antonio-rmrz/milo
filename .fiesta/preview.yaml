@@ -169,6 +169,16 @@ surfaces:
       milo preview homepage with martech off. Generic render-smoke — pick ONLY
       when no more specific scenario or feature surface covers the change.
     match: 'libs/utils/**'
+  - id: opt-41963-acrobat-express
+    page: /libs/blocks/merch/opt-41963/index.html
+    mechanism: pin
+    description: >-
+      OPT-41963 Acrobat Express Merchandising V2 treatment variant demo: pricing
+      card row showing Acrobat Pro, Acrobat Express (AI-first, new entry plan),
+      and Acrobat Pro for Teams cards side by side. Validates card layout,
+      AI-first badge, Get-started CTA, and daa-lh / daa-ll analytics attributes
+      on the new Express card.
+    match: '{libs/blocks/merch/opt-41963/**,nala/features/personalization/opt-41963*}'
   - id: blocks-merch
     url: https://main--milo--adobecom.aem.page/drafts/rivero/merch/special-offers?martech=off
     description: >-

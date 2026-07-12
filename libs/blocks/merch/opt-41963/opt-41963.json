@@ -1,0 +1,43 @@
+{
+  "info": {
+    "total": 2,
+    "offset": 0,
+    "limit": 2,
+    "data": [
+      {
+        "key": "manifest-type",
+        "value": "Test or Promo"
+      },
+      {
+        "key": "manifest-override-name",
+        "value": "OPT-41963"
+      }
+    ]
+  },
+  "experiences": {
+    "total": 1,
+    "offset": 0,
+    "limit": 1,
+    "data": [
+      {
+        "action": "insertContentAfter",
+        "selector": ".merch-card.acrobat-pro",
+        "page filter (optional)": "/acrobat/acrobat-pdf-pack|/acrobat/business/acrobat-pro-dc",
+        "all": "/fragments/acrobat/express-merchandising-v2/acrobat-express-card"
+      }
+    ]
+  },
+  "placeholders": {
+    "total": 0,
+    "offset": 0,
+    "limit": 0,
+    "data": []
+  },
+  ":version": 3,
+  ":names": [
+    "info",
+    "experiences",
+    "placeholders"
+  ],
+  ":type": "multi-sheet"
+}
