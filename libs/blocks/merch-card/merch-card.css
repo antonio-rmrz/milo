@@ -42,6 +42,11 @@ merch-card.special-offers del span[is="inline-price"] {
   text-decoration: line-through;
 }
 
+merch-card.ai-first {
+  --merch-card-ai-first-badge-background: var(--color-accent, #0265DC);
+  --merch-card-ai-first-badge-color: var(--color-white, #FFF);
+}
+
 .dark .merch-card .con-button.outline:hover {
   color: var(--color-white);
   background-color: var(--color-black);

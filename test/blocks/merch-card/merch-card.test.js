@@ -546,6 +546,26 @@ describe('Viewport Responsiveness without Sinon', () => {
   });
 });
 
+describe('Acrobat Express AI-first Merch Card', () => {
+  it('Supports ai-first plans card with badge', async () => {
+    document.body.innerHTML = await readMockText('/test/blocks/merch-card/mocks/ai-first-card.html');
+    const merchCard = await init(document.querySelector('.merch-card.plans.ai-first'));
+    expectToValidateHTMLAssertions(merchCard, {
+      elements: [
+        { selector: 'h3[slot="heading-xs"]', textContent: 'Acrobat Express' },
+        { selector: 'div[slot="body-xs"]' },
+        { attribute: { name: 'variant', value: 'plans' } },
+        { attribute: { name: 'badge-background-color', value: '#0265DC' } },
+        { attribute: { name: 'badge-color', value: '#FFFFFF' } },
+        { attribute: { name: 'badge-text', value: 'AI-first plan' } },
+      ],
+      buttons: ['Learn More', 'Buy now'],
+    });
+    expect(merchCard.classList.contains('ai-first')).to.be.true;
+    expect(merchCard.classList.contains('badge-card')).to.be.true;
+  });
+});
+
 describe('Product Merch Card', () => {
   it('Supports Product Merch card with callout', async () => {
     document.body.innerHTML = await readMockText('/test/blocks/merch-card/mocks/product.html');
