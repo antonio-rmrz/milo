@@ -121,15 +121,26 @@ export async function sendResults() {
   );
 }
 
+function chipForIcon(icon) {
+  if (icon === 'green') return ['preflight-chip-ok', 'OK'];
+  if (icon === 'red') return ['preflight-chip-error', 'Error'];
+  if (icon === 'orange') return ['preflight-chip-warning', 'Warning'];
+  return null;
+}
+
 function SeoItem({ id, icon, title, description, supportsAi }) {
   const aiSuggestion = aiSuggestions.value.find((suggestion) => suggestion.id === id)?.aiSuggestion;
   const showLoadingAi = isAsoSuite.value && supportsAi && icon === 'red' && !aiSuggestion;
   const showAiSuggestion = supportsAi && aiSuggestion && icon === 'red';
+  const chip = chipForIcon(icon);
   return html`
     <div class=preflight-item>
       <div class="result-icon ${icon}"></div>
       <div class=preflight-item-text>
-        <p class=preflight-item-title>${title}</p>
+        <p class=preflight-item-title>
+          ${title}
+          ${chip && html`<span class="preflight-chip ${chip[0]}">${chip[1]}</span>`}
+        </p>
         <p class=preflight-item-description>${description}</p>
          ${showLoadingAi && html`<p class="ai-suggestion">AI suggestion: <div class="result-icon purple"></div></p>`}
         ${showAiSuggestion && html`<p class="ai-suggestion">AI suggestion: ${aiSuggestion}</p>`}

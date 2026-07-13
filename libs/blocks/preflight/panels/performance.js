@@ -1,8 +1,12 @@
 import { html, signal, useEffect } from '../../../deps/htm-preact.js';
 import preflightApi from '../checks/preflightApi.js';
 import { STATUS_TO_ICON_MAP } from '../checks/constants.js';
+import { updateTabBadge } from '../preflight.js';
 
 const { getLcpEntry, runChecks } = preflightApi.performance;
+
+// Whether an LCP element was detected (controls the Highlight LCP link)
+const lcpFound = signal(false);
 
 // Define signals for each performance check result
 const lcpElResult = signal({ icon: 'purple', title: 'Valid LCP', description: 'Checking...' });
@@ -51,17 +55,38 @@ async function getResults() {
   });
 
   await Promise.all(checkPromises);
+
+  const allSignals = [lcpElResult, singleBlockResult, imageSizeResult, videoPosterResult,
+    fragmentsResult, personalizationResult, placeholdersResult, iconsResult];
+  const errors = allSignals.filter((s) => s.value.icon === 'red').length;
+  const warnings = allSignals.filter((s) => s.value.icon === 'orange').length;
+  if (errors > 0 || warnings > 0) updateTabBadge('Performance', errors, warnings);
+
+  // Determine if an LCP element exists to control the Highlight link visibility
+  const lcp = await getLcpEntry(window.location.pathname, document).catch(() => null);
+  lcpFound.value = !!(lcp && lcp.element);
+}
+
+function chipForIcon(icon) {
+  if (icon === 'green') return ['preflight-chip-ok', 'OK'];
+  if (icon === 'red') return ['preflight-chip-error', 'Error'];
+  if (icon === 'orange') return ['preflight-chip-warning', 'Warning'];
+  return null;
 }
 
 /**
  * Component to display a single performance check result.
  */
 function PerformanceItem({ icon, title, description }) {
+  const chip = chipForIcon(icon);
   return html`
     <div class="preflight-item">
       <div class="result-icon ${icon}"></div>
       <div class="preflight-item-text">
-        <p class="preflight-item-title">${title}</p>
+        <p class="preflight-item-title">
+          ${title}
+          ${chip && html`<span class="preflight-chip ${chip[0]}">${chip[1]}</span>`}
+        </p>
         <p class="preflight-item-description">${description}</p>
       </div>
     </div>`;
@@ -131,11 +156,13 @@ export default function Panel() {
         <${PerformanceItem} ...${iconsResult.value} />
       </div>
       <div>Unsure on how to get this page fully into the green? Check out the <a class="performance-guidelines" href="https://milo.adobe.com/docs/authoring/performance/" target="_blank">Milo Performance Guidelines</a>.</div>
-      <div> 
-        <span class="performance-element-preview" onMouseEnter=${highlightElement} onMouseLeave=${removeHighlight}>
-          Highlight the found LCP section
-        </span> 
-      </div>
+      ${lcpFound.value && html`
+        <div>
+          <span class="performance-element-preview" onMouseEnter=${highlightElement} onMouseLeave=${removeHighlight}>
+            Highlight the found LCP section
+          </span>
+        </div>
+      `}
       <div class="lcp-tooltip-modal"></div>
     </div>
   `;

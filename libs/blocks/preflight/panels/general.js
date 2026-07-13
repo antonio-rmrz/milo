@@ -3,6 +3,14 @@ import { STATUS_TO_ICON_MAP, STRUCTURE_TITLES } from '../checks/constants.js';
 import { runChecks as runStructureChecks } from '../checks/structure.js';
 import userCanPublishPage from '../../../tools/utils/publish.js';
 import { runChecks as runLocalizationChecks } from '../checks/localization.js';
+import { updateTabBadge } from '../preflight.js';
+
+function chipForIcon(icon) {
+  if (icon === 'green') return ['preflight-chip-ok', 'OK'];
+  if (icon === 'red') return ['preflight-chip-error', 'Error'];
+  if (icon === 'orange') return ['preflight-chip-warning', 'Warning'];
+  return null;
+}
 
 const DEF_NOT_FOUND = 'Not found';
 const DEF_NEVER = 'Never';
@@ -29,32 +37,39 @@ const localizationResult = signal({ icon: 'purple', title: 'Links', description:
 const localizationIssues = signal([]);
 const localizationClosed = signal(false);
 
+const structureSignals = [
+  navResult, footerResult, regionSelectorResult, georoutingResult, breadcrumbsResult,
+];
+
+function recomputeGeneralBadge(locIssues) {
+  const errors = structureSignals.filter((s) => s.value.icon === 'red').length
+    + (localizationResult.value.icon === 'red' ? 1 : 0)
+    + locIssues;
+  const warnings = structureSignals.filter((s) => s.value.icon === 'orange').length
+    + (localizationResult.value.icon === 'orange' ? 1 : 0);
+  if (errors > 0 || warnings > 0) updateTabBadge('General', errors, warnings);
+}
+
 async function getStructureResults() {
-  const signals = [
-    navResult,
-    footerResult,
-    regionSelectorResult,
-    georoutingResult,
-    breadcrumbsResult,
-  ];
   const checks = runStructureChecks({ area: document });
 
   await Promise.all(checks.map((result, index) => Promise.resolve(result)
     .then((res) => {
       const icon = STATUS_TO_ICON_MAP[res.status] || 'orange';
-      signals[index].value = {
+      structureSignals[index].value = {
         icon,
         title: res.title,
         description: res.description,
       };
     })
     .catch((error) => {
-      signals[index].value = {
+      structureSignals[index].value = {
         icon: 'red',
         title: 'Error',
         description: `Error: ${error.message}`,
       };
     })));
+  recomputeGeneralBadge(localizationIssues.value.length);
 }
 
 async function getLocalizationResults() {
@@ -65,13 +80,16 @@ async function getLocalizationResults() {
       title: res.title,
       description: res.description,
     };
-    localizationIssues.value = res.details?.violations || [];
+    const violations = res.details?.violations || [];
+    localizationIssues.value = violations;
+    recomputeGeneralBadge(violations.length);
   } catch (error) {
     localizationResult.value = {
       icon: 'red',
       title: 'Links',
       description: `Error: ${error.message}`,
     };
+    recomputeGeneralBadge(0);
   }
 }
 
@@ -301,11 +319,15 @@ function ContentGroup({ name, group }) {
 }
 
 function StructureItem({ icon, title, description }) {
+  const chip = chipForIcon(icon);
   return html`
     <div class="preflight-item">
       <div class="result-icon ${icon}"></div>
       <div class="preflight-item-text">
-        <p class="preflight-item-title">${title}</p>
+        <p class="preflight-item-title">
+          ${title}
+          ${chip && html`<span class="preflight-chip ${chip[0]}">${chip[1]}</span>`}
+        </p>
         <p class="preflight-item-description">${description}</p>
       </div>
     </div>`;

@@ -1,20 +1,31 @@
 import { html, signal, useEffect } from '../../../deps/htm-preact.js';
-import { createTag } from '../../../utils/utils.js';
 
-const martechBlock = signal(null);
+const martechRows = signal(null);
 const copiedTimeout = signal(null);
 const btnText = signal('Copy Table');
 
-function getTable(strings) {
+function getClipboardHtml(rows) {
   const table = document.createElement('table');
   table.setAttribute('border', 1);
   const headerRow = document.createElement('tr');
-  headerRow.append(createTag('th', { colspan: 2, style: 'width: 100%' }, 'martech metadata'));
+  const th = document.createElement('th');
+  th.setAttribute('colspan', 2);
+  th.setAttribute('style', 'width: 100%');
+  th.textContent = 'martech metadata';
+  headerRow.append(th);
   table.append(headerRow);
-  [...strings].forEach((str) => {
+  rows.forEach(([str]) => {
     const tr = document.createElement('tr');
-    tr.append(createTag('td', { colspan: 1 }, createTag('h3', {}, str)));
-    tr.append(createTag('td', { colspan: 1 }, createTag('h3', { 'data-ccp-parastyle': 'DNT' }, str)));
+    const td1 = document.createElement('td');
+    const h3a = document.createElement('h3');
+    h3a.textContent = str;
+    td1.append(h3a);
+    const td2 = document.createElement('td');
+    const h3b = document.createElement('h3');
+    h3b.setAttribute('data-ccp-parastyle', 'DNT');
+    h3b.textContent = str;
+    td2.append(h3b);
+    tr.append(td1, td2);
     table.append(tr);
   });
   return table.outerHTML;
@@ -30,17 +41,17 @@ async function checkMartechMeta() {
       if (str) acc.push(str);
       return acc;
     }, []);
-  martechBlock.value = getTable(new Set(strings));
+  martechRows.value = [...new Set(strings)].map((str) => [str]);
 }
 
 function copyTable() {
+  if (!martechRows.value) return;
   try {
-    /* global ClipboardItem */
-    const clipboardData = [new ClipboardItem({ 'text/html': new Blob([martechBlock.value], { type: 'text/html' }) })];
+    const clipboardData = [new ClipboardItem({ 'text/html': new Blob([getClipboardHtml(martechRows.value)], { type: 'text/html' }) })];
     navigator.clipboard.write(clipboardData);
-    btnText.value = '✔ Copied!';
+    btnText.value = 'Copied!';
   } catch (e) {
-    btnText.value = 'ⓧ Error Copying';
+    btnText.value = 'Error Copying';
     /* eslint-disable-next-line no-console */
     console.error(e);
   }
@@ -54,10 +65,30 @@ export default function Martech() {
   useEffect(() => { checkMartechMeta(); }, []);
 
   return html`
-  <div class="access-columns martech">
-    ${martechBlock.value && html`
-      <button class="preflight-action" onclick=${copyTable}>${btnText.value}</button>
-      <div dangerouslySetInnerHTML="${{ __html: martechBlock.value }}"></div>
-    `}
-  </div>`;
+    <div class="preflight .martech">
+      ${martechRows.value && html`
+        <div class="preflight-section-header">
+          <h2 class="preflight-section-title">Martech Metadata</h2>
+          <button class="preflight-action" onclick=${copyTable}>${btnText.value}</button>
+        </div>
+        <div class="preflight-martech-scroll">
+          <table class="preflight-martech-table">
+            <thead>
+              <tr>
+                <th>String</th>
+                <th>DNT</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${martechRows.value.map(([str]) => html`
+                <tr>
+                  <td>${str}</td>
+                  <td>${str}</td>
+                </tr>
+              `)}
+            </tbody>
+          </table>
+        </div>
+      `}
+    </div>`;
 }
