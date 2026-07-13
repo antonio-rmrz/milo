@@ -3086,6 +3086,52 @@ describe('Utils', () => {
     });
   });
 
+  describe('getCountry param resolution', () => {
+    beforeEach(() => {
+      utils.PAGE_URL.searchParams.delete('country');
+      utils.PAGE_URL.searchParams.delete('akamaiLocale');
+      sessionStorage.removeItem('akamai');
+    });
+
+    afterEach(() => {
+      utils.PAGE_URL.searchParams.delete('country');
+      utils.PAGE_URL.searchParams.delete('akamaiLocale');
+      sessionStorage.removeItem('akamai');
+    });
+
+    it('returns country from ?country= param only', async () => {
+      utils.PAGE_URL.searchParams.set('country', 'sg');
+      const result = await utils.getCountry(true);
+      expect(result).to.equal('sg');
+    });
+
+    it('returns country from ?akamaiLocale= param only (regression guard)', async () => {
+      utils.PAGE_URL.searchParams.set('akamaiLocale', 'sg');
+      const result = await utils.getCountry(true);
+      expect(result).to.equal('sg');
+    });
+
+    it('?country= wins over ?akamaiLocale= when both are set', async () => {
+      utils.PAGE_URL.searchParams.set('country', 'us');
+      utils.PAGE_URL.searchParams.set('akamaiLocale', 'sg');
+      const result = await utils.getCountry(true);
+      expect(result).to.equal('us');
+    });
+
+    it('invalid ?country= falls through to ?akamaiLocale=', async () => {
+      utils.PAGE_URL.searchParams.set('country', '123');
+      utils.PAGE_URL.searchParams.set('akamaiLocale', 'sg');
+      const result = await utils.getCountry(true);
+      expect(result).to.equal('sg');
+    });
+
+    it('falls through to sessionStorage when neither param is set', async () => {
+      sessionStorage.setItem('akamai', 'jp');
+      const result = await utils.getCountry(true);
+      expect(result).to.equal('jp');
+    });
+  });
+
   describe('resolveDetectedMarketCountry bot detection', () => {
     const originalUserAgent = navigator.userAgent;
 
