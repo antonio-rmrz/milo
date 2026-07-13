@@ -196,6 +196,17 @@ function handleViewportOrder({ el, foreground, media: image, size }) {
   });
 }
 
+function handlePlayButtonFocus(el) {
+  let keyboardNavActive = false;
+  el.addEventListener('keydown', () => { keyboardNavActive = true; }, { capture: true });
+  el.addEventListener('mousedown', () => { keyboardNavActive = false; }, { capture: true });
+  el.addEventListener('focusin', (e) => {
+    const btn = e.target.closest('.pause-play-wrapper, .play-pause-button');
+    if (!btn || !keyboardNavActive) return;
+    btn.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  });
+}
+
 export default async function init(el) {
   const excDark = ['light', 'quiet'];
   if (!excDark.some((s) => el.classList.contains(s))) el.classList.add('dark');
@@ -247,4 +258,5 @@ export default async function init(el) {
 
   await Promise.all(promiseArr);
   handleViewportOrder({ el, foreground, media, size });
+  handlePlayButtonFocus(el);
 }

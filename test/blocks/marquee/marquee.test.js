@@ -105,6 +105,45 @@ describe('marquee', () => {
     });
   });
 
+  describe('play button focus visibility', () => {
+    it('scrolls play button into view on keyboard focus', async () => {
+      const host = document.createElement('div');
+      host.innerHTML = `
+        <div class="marquee" id="play-btn-focus">
+          <div>
+            <div class="video-container video-holder">
+              <video muted autoplay loop></video>
+              <a class="pause-play-wrapper" role="button" title="Pause" aria-label="Pause" aria-pressed="true" video-index="1">
+                <div class="offset-filler is-playing">
+                  <img class="accessibility-control pause-icon" alt="Pause" src="">
+                  <img class="accessibility-control play-icon" alt="Play" src="">
+                </div>
+              </a>
+            </div>
+          </div>
+          <div>
+            <div><h2>Heading</h2></div>
+            <div><picture><img alt="mock" src=""></picture></div>
+          </div>
+        </div>`;
+      document.body.append(host);
+      const marquee = host.querySelector('#play-btn-focus');
+      await init(marquee);
+
+      const btn = marquee.querySelector('.pause-play-wrapper');
+      expect(btn).to.exist;
+
+      let scrollCalled = false;
+      btn.scrollIntoView = () => { scrollCalled = true; };
+
+      marquee.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
+      btn.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+
+      expect(scrollCalled).to.be.true;
+      host.remove();
+    });
+  });
+
   describe('supports videos', () => {
     before(() => {
       document.body.innerHTML = video;

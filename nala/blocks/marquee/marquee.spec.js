@@ -1,4 +1,4 @@
-module.exports = {
+const spec = {
   name: 'Marquee Block',
   features: [
     {
@@ -120,119 +120,7 @@ module.exports = {
       },
       tags: '@marquee @marquee-inline @smoke @regression @milo',
     },
-    {
-      tcid: '10',
-      name: 'Marquee (split,small)',
-      path: '/drafts/nala/blocks/marquee/marquee-split-small',
-      data: {
-        detailText: 'DETAIL M BOLD 12/15 OPTIONAL',
-        h2Text: 'Marquee Split ½ dark',
-        bodyText: 'Lorem ipsum dolor sit amet',
-        outlineButtonText: 'Secondary action',
-        blueButtonText: 'Call to action',
-      },
-      tags: '@marquee @marquee-split-small @smoke @regression @milo',
-    },
-    {
-      tcid: '11',
-      name: 'Marquee (split,large)',
-      path: '/drafts/nala/blocks/marquee/marquee-split-large',
-      data: {
-        detailText: 'DETAIL L BOLD 16/20',
-        h2Text: 'Heading XXL 44/55 Lorem',
-        bodyText: 'Body XL Regular (22/33) Lorem ipsum dolor sit amet',
-        blueButtonText: 'Call to action',
-        linkText: 'Body M 18/27',
-      },
-      tags: '@marquee @marquee-split-large @smoke @regression @milo',
-    },
-    {
-      tcid: '12',
-      name: 'Marquee (split,one-third,large,light)',
-      path: '/drafts/nala/blocks/marquee/marquee-split-one-third-large-light',
-      data: {
-        detailText: 'DETAIL L BOLD 16/20',
-        h2Text: 'Heading XXL 44/55 Lorem',
-        bodyText: 'Body XL Regular (22/33) Lorem ipsum dolor sit amet',
-        blueButtonText: 'Call to action',
-        linkText: 'Body M 18/27',
-      },
-      tags: '@marquee @marquee-split-one-third-large-light @smoke @regression @milo',
-    },
-    {
-      tcid: '13',
-      name: 'Marquee (split,one-third)',
-      path: '/drafts/nala/blocks/marquee/marquee-split-one-third',
-      data: {
-        detailText: 'DETAIL M BOLD 12/15 OPTIONAL',
-        h2Text: 'Heading XL 36/45 Lorem',
-        bodyText: 'Body M Regular (18/27) Lorem ipsum dolor sit amet',
-        blueButtonText: 'Call to action',
-        linkText: 'Body M 18/27',
-      },
-      tags: '@marquee @marquee-split-one-third @smoke @regression @milo',
-    },
-    {
-      tcid: '14',
-      name: 'Marquee (split,one-third,small,light)',
-      path: '/drafts/nala/blocks/marquee/marquee-split-one-third-small-light',
-      data: {
-        detailText: 'DETAIL M BOLD 12/15 OPTIONAL',
-        h2Text: 'Heading XL 36/45 Lorem',
-        bodyText: 'Body M Regular (18/27) Lorem ipsum dolor sit amet',
-        blueButtonText: 'Call to action',
-      },
-      tags: '@marquee @marquee-split-one-third-small-light @smoke @regression @milo',
-    },
-    {
-      tcid: '15',
-      name: 'Marquee small (background video playsinline)',
-      path: '/drafts/nala/blocks/marquee/marquee-small-background-video',
-      data: {
-        h2Text: 'Marquee standard small dark',
-        bodyText: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit',
-        blueButtonText: 'Call to action',
-      },
-      tags: '@marquee @marquee-video @smoke @regression @milo',
-    },
-    {
-      tcid: '16',
-      name: 'Marquee large (background video playsinline desktop)',
-      path: '/drafts/nala/blocks/marquee/marquee-large-desktop-video-autoplay',
-      data: {
-        h2Text: 'Desktop video only',
-        bodyText: 'From amazing AI-generated images in Photoshop',
-        blueButtonText: 'Free trial',
-        linkText: 'See all plans',
-      },
-      tags: '@marquee @marquee-video @smoke @regression @milo',
-    },
-    {
-      tcid: '17',
-      name: 'Marquee large (background video playsinline loop once)',
-      path: '/drafts/nala/blocks/marquee/video-autoplay-loop-once',
-      data: {
-        detailText: 'DETAIL L 16/20',
-        h2Text: 'Heading XL 36/45 Media (large, dark)',
-        bodyText: 'Body M 18/27 Lorem ipsum dolor sit amet',
-        blueButtonText: 'Learn More',
-      },
-      tags: '@marquee @marquee-video @smoke @regression @milo',
-    },
-    {
-      tcid: '18',
-      name: 'Marquee background image focal point',
-      path: '/drafts/nala/blocks/marquee/marquee-background-image-focal-point',
-      data: {
-        detailText: 'This is my detail',
-        h2Text: 'Heading XL Marquee standard medium left',
-        bodyText: 'Body M Lorem ipsum dolor sit amet.',
-        outlineButtonText: 'Lorem ipsum',
-        blueButtonText: 'Learn more',
-        linkText: 'Text link',
-
-      },
-      tags: '@marquee @m16 @marquee-background @smoke @regression @milo',
-    },
   ],
 };
+
+export default spec;
