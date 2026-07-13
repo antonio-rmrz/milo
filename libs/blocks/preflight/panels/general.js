@@ -1,8 +1,9 @@
 import { html, signal, useEffect } from '../../../deps/htm-preact.js';
-import { STATUS_TO_ICON_MAP, STRUCTURE_TITLES } from '../checks/constants.js';
+import { STATUS, STATUS_TO_ICON_MAP, STRUCTURE_TITLES } from '../checks/constants.js';
 import { runChecks as runStructureChecks } from '../checks/structure.js';
 import userCanPublishPage from '../../../tools/utils/publish.js';
 import { runChecks as runLocalizationChecks } from '../checks/localization.js';
+import { updateBadge } from '../badge-counts.js';
 
 const DEF_NOT_FOUND = 'Not found';
 const DEF_NEVER = 'Never';
@@ -20,41 +21,49 @@ const CROSS_REPO_PREFIXES = [
 
 const content = signal({});
 
-const navResult = signal({ icon: 'purple', title: STRUCTURE_TITLES.navigation, description: 'Checking...' });
-const footerResult = signal({ icon: 'purple', title: STRUCTURE_TITLES.footer, description: 'Checking...' });
-const regionSelectorResult = signal({ icon: 'purple', title: STRUCTURE_TITLES.regionSelector, description: 'Checking...' });
-const georoutingResult = signal({ icon: 'purple', title: STRUCTURE_TITLES.georouting, description: 'Checking...' });
-const breadcrumbsResult = signal({ icon: 'purple', title: STRUCTURE_TITLES.breadcrumbs, description: 'Checking...' });
-const localizationResult = signal({ icon: 'purple', title: 'Links', description: 'Checking...' });
+const navResult = signal({ icon: 'purple', title: STRUCTURE_TITLES.navigation, description: 'Checking...', status: null });
+const footerResult = signal({ icon: 'purple', title: STRUCTURE_TITLES.footer, description: 'Checking...', status: null });
+const regionSelectorResult = signal({ icon: 'purple', title: STRUCTURE_TITLES.regionSelector, description: 'Checking...', status: null });
+const georoutingResult = signal({ icon: 'purple', title: STRUCTURE_TITLES.georouting, description: 'Checking...', status: null });
+const breadcrumbsResult = signal({ icon: 'purple', title: STRUCTURE_TITLES.breadcrumbs, description: 'Checking...', status: null });
+const localizationResult = signal({ icon: 'purple', title: 'Links', description: 'Checking...', status: null });
 const localizationIssues = signal([]);
 const localizationClosed = signal(false);
 
+const structureSignals = [
+  navResult, footerResult, regionSelectorResult, georoutingResult, breadcrumbsResult,
+];
+
+function computeGeneralBadge() {
+  const allResults = [...structureSignals.map((s) => s.value), localizationResult.value];
+  const errors = allResults.filter((r) => r.status === STATUS.FAIL).length;
+  const warnings = allResults.filter((r) => r.status === STATUS.LIMBO).length
+    + localizationIssues.value.length;
+  updateBadge('General', errors, warnings);
+}
+
 async function getStructureResults() {
-  const signals = [
-    navResult,
-    footerResult,
-    regionSelectorResult,
-    georoutingResult,
-    breadcrumbsResult,
-  ];
   const checks = runStructureChecks({ area: document });
 
   await Promise.all(checks.map((result, index) => Promise.resolve(result)
     .then((res) => {
       const icon = STATUS_TO_ICON_MAP[res.status] || 'orange';
-      signals[index].value = {
+      structureSignals[index].value = {
         icon,
         title: res.title,
         description: res.description,
+        status: res.status,
       };
     })
     .catch((error) => {
-      signals[index].value = {
+      structureSignals[index].value = {
         icon: 'red',
         title: 'Error',
         description: `Error: ${error.message}`,
+        status: STATUS.FAIL,
       };
     })));
+  computeGeneralBadge();
 }
 
 async function getLocalizationResults() {
@@ -64,6 +73,7 @@ async function getLocalizationResults() {
       icon: STATUS_TO_ICON_MAP[res.status] || 'orange',
       title: res.title,
       description: res.description,
+      status: res.status,
     };
     localizationIssues.value = res.details?.violations || [];
   } catch (error) {
@@ -71,8 +81,10 @@ async function getLocalizationResults() {
       icon: 'red',
       title: 'Links',
       description: `Error: ${error.message}`,
+      status: STATUS.FAIL,
     };
   }
+  computeGeneralBadge();
 }
 
 function getAdminUrl(url, type) {
@@ -300,13 +312,30 @@ function ContentGroup({ name, group }) {
     </div>`;
 }
 
+const ICON_TO_CHIP = {
+  green: 'pass',
+  red: 'error',
+  orange: 'warn',
+  purple: 'loading',
+  empty: 'empty',
+};
+
+const CHIP_SYMBOLS = {
+  pass: html`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  error: html`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  warn: html`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  loading: html`<svg class="preflight-progress-ring" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>`,
+  empty: html`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>`,
+};
+
 function StructureItem({ icon, title, description }) {
+  const chipType = ICON_TO_CHIP[icon] || 'empty';
   return html`
-    <div class="preflight-item">
-      <div class="result-icon ${icon}"></div>
-      <div class="preflight-item-text">
-        <p class="preflight-item-title">${title}</p>
-        <p class="preflight-item-description">${description}</p>
+    <div class="preflight-card">
+      <div class="preflight-chip preflight-chip-${chipType}" aria-hidden="true">${CHIP_SYMBOLS[chipType]}</div>
+      <div class="preflight-card-text">
+        <p class="preflight-card-title">${title}</p>
+        <p class="preflight-card-description">${description}</p>
       </div>
     </div>`;
 }

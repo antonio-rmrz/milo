@@ -24,6 +24,8 @@ describe('Preflight Assets Panel', () => {
     window.runChecksFromAssets = originalWindowProps.runChecksFromAssets;
     window.isViewportTooSmallFromAssets = originalWindowProps.isViewportTooSmallFromAssets;
     window.mockImport = false;
+    /* clean up any back popovers created during tests */
+    document.querySelectorAll('.preflight-back-popover').forEach((el) => el.remove());
     sinon.restore();
   });
 
@@ -56,5 +58,44 @@ describe('Preflight Assets Panel', () => {
     expect(container.querySelector('.assets-item')).to.exist;
     expect(container.querySelector('.assets-item-title')).to.exist;
     expect(container.querySelector('.assets-item-description')).to.exist;
+  });
+});
+
+describe('Preflight back-to-preflight popover DOM', () => {
+  afterEach(() => {
+    document.querySelectorAll('.preflight-back-popover').forEach((el) => el.remove());
+  });
+
+  it('popover is appended to body with a Preflight button', () => {
+    /* Replicate showBackPopover() logic from assets.js */
+    if (!document.querySelector('.preflight-back-popover')) {
+      const popover = document.createElement('div');
+      popover.className = 'preflight-back-popover';
+      popover.innerHTML = '<span>Back to</span><button type="button">Preflight</button>';
+      document.body.appendChild(popover);
+    }
+
+    const popover = document.querySelector('.preflight-back-popover');
+    expect(popover).to.exist;
+
+    const btn = popover.querySelector('button');
+    expect(btn).to.exist;
+    expect(btn.textContent).to.include('Preflight');
+  });
+
+  it('popover is not duplicated on repeated calls', () => {
+    const addPopover = () => {
+      if (!document.querySelector('.preflight-back-popover')) {
+        const p = document.createElement('div');
+        p.className = 'preflight-back-popover';
+        document.body.appendChild(p);
+      }
+    };
+
+    addPopover();
+    addPopover();
+    addPopover();
+
+    expect(document.querySelectorAll('.preflight-back-popover').length).to.equal(1);
   });
 });

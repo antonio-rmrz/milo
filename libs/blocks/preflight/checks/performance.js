@@ -65,6 +65,7 @@ export async function checkLcpEl(url, area, observeLcp) {
       title: PERFORMANCE_TITLES.Performance,
       status: STATUS.FAIL,
       description: 'No LCP element found.',
+      lcpElement: null,
     };
   }
   const firstSection = area.querySelector('main > div.section');
@@ -77,6 +78,7 @@ export async function checkLcpEl(url, area, observeLcp) {
     description: validLcp
       ? 'Valid LCP in the first section detected.'
       : 'No LCP image or video in the first section detected. Please check the page and make sure the first section is your marquee and all the fragments are working properly. If everything is good, ignore the error.',
+    lcpElement: lcp?.element ?? null,
   };
 }
 

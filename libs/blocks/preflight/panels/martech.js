@@ -8,6 +8,7 @@ const btnText = signal('Copy Table');
 function getTable(strings) {
   const table = document.createElement('table');
   table.setAttribute('border', 1);
+  table.className = 'preflight-martech-table';
   const headerRow = document.createElement('tr');
   headerRow.append(createTag('th', { colspan: 2, style: 'width: 100%' }, 'martech metadata'));
   table.append(headerRow);
@@ -35,12 +36,11 @@ async function checkMartechMeta() {
 
 function copyTable() {
   try {
-    /* global ClipboardItem */
     const clipboardData = [new ClipboardItem({ 'text/html': new Blob([martechBlock.value], { type: 'text/html' }) })];
     navigator.clipboard.write(clipboardData);
-    btnText.value = '✔ Copied!';
+    btnText.value = '\u2714 Copied!';
   } catch (e) {
-    btnText.value = 'ⓧ Error Copying';
+    btnText.value = '\u24e7 Error Copying';
     /* eslint-disable-next-line no-console */
     console.error(e);
   }
