@@ -3,6 +3,7 @@ import { STATUS_TO_ICON_MAP, STRUCTURE_TITLES } from '../checks/constants.js';
 import { runChecks as runStructureChecks } from '../checks/structure.js';
 import userCanPublishPage from '../../../tools/utils/publish.js';
 import { runChecks as runLocalizationChecks } from '../checks/localization.js';
+import { updateBadge } from '../preflight-badges.js';
 
 const DEF_NOT_FOUND = 'Not found';
 const DEF_NEVER = 'Never';
@@ -28,6 +29,21 @@ const breadcrumbsResult = signal({ icon: 'purple', title: STRUCTURE_TITLES.bread
 const localizationResult = signal({ icon: 'purple', title: 'Links', description: 'Checking...' });
 const localizationIssues = signal([]);
 const localizationClosed = signal(false);
+
+function reportGeneralBadge() {
+  const allStructure = [
+    navResult, footerResult, regionSelectorResult, georoutingResult, breadcrumbsResult,
+  ];
+  const stillLoading = allStructure.some((s) => s.value.icon === 'purple')
+    || localizationResult.value.icon === 'purple';
+  if (stillLoading) return;
+  const errorCount = allStructure.filter((s) => s.value.icon === 'red').length
+    + (localizationResult.value.icon === 'red' ? 1 : 0)
+    + localizationIssues.value.length;
+  const warnCount = allStructure.filter((s) => s.value.icon === 'orange').length
+    + (localizationResult.value.icon === 'orange' ? 1 : 0);
+  updateBadge('General', errorCount, warnCount);
+}
 
 async function getStructureResults() {
   const signals = [
@@ -55,6 +71,7 @@ async function getStructureResults() {
         description: `Error: ${error.message}`,
       };
     })));
+  reportGeneralBadge();
 }
 
 async function getLocalizationResults() {
@@ -73,6 +90,7 @@ async function getLocalizationResults() {
       description: `Error: ${error.message}`,
     };
   }
+  reportGeneralBadge();
 }
 
 function getAdminUrl(url, type) {
@@ -300,14 +318,43 @@ function ContentGroup({ name, group }) {
     </div>`;
 }
 
+const ICON_TO_CHIP = {
+  green: 'pass',
+  red: 'error',
+  orange: 'warning',
+  purple: 'loading',
+  empty: 'info',
+};
+
+const ICON_TO_LABEL = {
+  green: 'Pass',
+  red: 'Error',
+  orange: 'Warning',
+  purple: 'Checking',
+  empty: 'N/A',
+};
+
+function ChipIcon({ icon }) {
+  if (icon !== 'purple') return null;
+  return html`<svg class="progress-ring" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="28 10" opacity="0.4"/>
+    <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="10 28"/>
+  </svg>`;
+}
+
 function StructureItem({ icon, title, description }) {
+  const chipType = ICON_TO_CHIP[icon] || 'info';
+  const chipLabel = ICON_TO_LABEL[icon] || icon;
   return html`
-    <div class="preflight-item">
-      <div class="result-icon ${icon}"></div>
-      <div class="preflight-item-text">
-        <p class="preflight-item-title">${title}</p>
-        <p class="preflight-item-description">${description}</p>
+    <div class="preflight-card">
+      <div class="preflight-card-header">
+        <p class="preflight-card-title">${title}</p>
+        <span class="preflight-chip preflight-chip-${chipType}">
+          <${ChipIcon} icon=${icon} />
+          ${chipLabel}
+        </span>
       </div>
+      <p class="preflight-card-description">${description}</p>
     </div>`;
 }
 

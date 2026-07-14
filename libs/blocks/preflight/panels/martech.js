@@ -1,5 +1,6 @@
 import { html, signal, useEffect } from '../../../deps/htm-preact.js';
 import { createTag } from '../../../utils/utils.js';
+import { updateBadge } from '../preflight-badges.js';
 
 const martechBlock = signal(null);
 const copiedTimeout = signal(null);
@@ -31,11 +32,11 @@ async function checkMartechMeta() {
       return acc;
     }, []);
   martechBlock.value = getTable(new Set(strings));
+  updateBadge('Martech', 0, 0);
 }
 
 function copyTable() {
   try {
-    /* global ClipboardItem */
     const clipboardData = [new ClipboardItem({ 'text/html': new Blob([martechBlock.value], { type: 'text/html' }) })];
     navigator.clipboard.write(clipboardData);
     btnText.value = '✔ Copied!';

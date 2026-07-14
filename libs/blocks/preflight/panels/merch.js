@@ -1,5 +1,6 @@
 import { html, signal, useEffect } from '../../../deps/htm-preact.js';
 import { checkUnpublishedFragments } from '../checks/merch.js';
+import { updateBadge } from '../preflight-badges.js';
 
 const wcsElements = signal([]);
 const masFieldsMultipleFragmentWarnings = signal([]);
@@ -98,6 +99,15 @@ function checkMasFieldsMultipleFragments() {
   masFieldsMultipleFragmentWarnings.value = warnings;
 }
 
+function reportMerchBadge() {
+  const errors = wcsElements.value.filter((e) => e.urlStatus === 'error'
+    || e.promoCodeStatus === 'expired' || e.promoCodeStatus === 'not-found').length
+    + unpublishedFragments.value.length;
+  const warnings = wcsElements.value.filter((e) => e.urlStatus === 'undetermined').length
+    + masFieldsMultipleFragmentWarnings.value.length;
+  updateBadge('M@S', errors, warnings);
+}
+
 async function checkUnpublishedFragmentsForPanel() {
   const main = document.querySelector('main');
   main?.querySelectorAll(`.${MAS_UNPUBLISHED_HIGHLIGHT}`).forEach((el) => {
@@ -113,6 +123,7 @@ async function checkUnpublishedFragmentsForPanel() {
       location: firstCard ? getBlockLocation(firstCard) : 0,
     };
   });
+  reportMerchBadge();
 }
 
 function getService() {
@@ -263,6 +274,7 @@ async function checkWcsElements() {
 
   wcsElements.value = elements;
   loading.value = false;
+  reportMerchBadge();
 
   elements.forEach(async (elementData, index) => {
     if (elementData.href) {

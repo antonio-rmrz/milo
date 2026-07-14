@@ -2,6 +2,7 @@ import { html, signal, useEffect } from '../../../deps/htm-preact.js';
 import { asoCache, getASOToken } from '../checks/asoApi.js';
 import { SEO_IDS, SEO_TITLES, STATUS, ASO_TIMEOUT_MS, ASO_POLL_INTERVAL_MS } from '../checks/constants.js';
 import { getChecksSuite, getPreflightResults } from '../checks/preflightApi.js';
+import { updateBadge } from '../preflight-badges.js';
 
 const DEF_ICON = 'purple';
 const DEF_DESC = 'Checking...';
@@ -121,19 +122,31 @@ export async function sendResults() {
   );
 }
 
+const ICON_TO_CHIP = { green: 'pass', red: 'error', orange: 'warning', purple: 'loading', empty: 'info' };
+const ICON_TO_LABEL = { green: 'Pass', red: 'Error', orange: 'Warning', purple: 'Checking', empty: 'N/A' };
+
 function SeoItem({ id, icon, title, description, supportsAi }) {
   const aiSuggestion = aiSuggestions.value.find((suggestion) => suggestion.id === id)?.aiSuggestion;
   const showLoadingAi = isAsoSuite.value && supportsAi && icon === 'red' && !aiSuggestion;
   const showAiSuggestion = supportsAi && aiSuggestion && icon === 'red';
+  const chipType = ICON_TO_CHIP[icon] || 'info';
+  const chipLabel = ICON_TO_LABEL[icon] || icon;
+  const isLoading = icon === 'purple';
   return html`
-    <div class=preflight-item>
-      <div class="result-icon ${icon}"></div>
-      <div class=preflight-item-text>
-        <p class=preflight-item-title>${title}</p>
-        <p class=preflight-item-description>${description}</p>
-         ${showLoadingAi && html`<p class="ai-suggestion">AI suggestion: <div class="result-icon purple"></div></p>`}
-        ${showAiSuggestion && html`<p class="ai-suggestion">AI suggestion: ${aiSuggestion}</p>`}
+    <div class="preflight-card">
+      <div class="preflight-card-header">
+        <p class="preflight-card-title">${title}</p>
+        <span class="preflight-chip preflight-chip-${chipType}">
+          ${isLoading && html`<svg class="progress-ring" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="28 10" opacity="0.4"/>
+            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="10 28"/>
+          </svg>`}
+          ${chipLabel}
+        </span>
       </div>
+      <p class="preflight-card-description">${description}</p>
+      ${showLoadingAi && html`<p class="ai-suggestion">AI suggestion: <svg class="progress-ring" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="28 10" opacity="0.4"/><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="10 28"/></svg></p>`}
+      ${showAiSuggestion && html`<p class="ai-suggestion">AI suggestion: ${aiSuggestion}</p>`}
     </div>`;
 }
 
@@ -173,6 +186,10 @@ async function getResults() {
   });
 
   await Promise.all(checkPromises);
+
+  const errorCount = icons.filter((i) => i === 'red').length;
+  const warnCount = icons.filter((i) => i === 'orange').length;
+  updateBadge('SEO', errorCount, warnCount);
 
   const red = icons.find((icon) => icon === 'red');
   if (!red) return;
