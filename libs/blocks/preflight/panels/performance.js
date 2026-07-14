@@ -1,6 +1,7 @@
 import { html, signal, useEffect } from '../../../deps/htm-preact.js';
 import preflightApi from '../checks/preflightApi.js';
-import { STATUS_TO_ICON_MAP } from '../checks/constants.js';
+import { STATUS_TO_ICON_MAP, STATUS } from '../checks/constants.js';
+import { setTabIssues } from '../preflight.js';
 
 const { getLcpEntry, runChecks } = preflightApi.performance;
 
@@ -13,6 +14,7 @@ const fragmentsResult = signal({ icon: 'purple', title: 'Fragments', description
 const personalizationResult = signal({ icon: 'purple', title: 'Personalization', description: 'Checking...' });
 const placeholdersResult = signal({ icon: 'purple', title: 'Placeholders', description: 'Checking...' });
 const iconsResult = signal({ icon: 'purple', title: 'Icons', description: 'Checking...' });
+const lcpFound = signal(false);
 
 /**
  * Runs performance checks and updates signals with the results.
@@ -30,6 +32,9 @@ async function getResults() {
   ];
   const checks = runChecks(window.location.pathname, document);
 
+  let errors = 0;
+  let warnings = 0;
+
   const checkPromises = checks.map((resultOrPromise, index) => {
     const signalResult = signals[index];
     return Promise.resolve(resultOrPromise)
@@ -40,6 +45,8 @@ async function getResults() {
           title: result.title.replace('Performance - ', ''),
           description: result.description,
         };
+        if (result.status === STATUS.FAIL) errors += 1;
+        else if (result.status === STATUS.LIMBO) warnings += 1;
       })
       .catch((error) => {
         signalResult.value = {
@@ -47,10 +54,15 @@ async function getResults() {
           title: 'Error',
           description: `Error: ${error.message}`,
         };
+        errors += 1;
       });
   });
 
   await Promise.all(checkPromises);
+  setTabIssues('Performance', { errors, warnings });
+
+  const lcp = await getLcpEntry(window.location.pathname, document).catch(() => null);
+  lcpFound.value = !!lcp?.element;
 }
 
 /**
@@ -131,11 +143,11 @@ export default function Panel() {
         <${PerformanceItem} ...${iconsResult.value} />
       </div>
       <div>Unsure on how to get this page fully into the green? Check out the <a class="performance-guidelines" href="https://milo.adobe.com/docs/authoring/performance/" target="_blank">Milo Performance Guidelines</a>.</div>
-      <div> 
+      ${lcpFound.value && html`<div>
         <span class="performance-element-preview" onMouseEnter=${highlightElement} onMouseLeave=${removeHighlight}>
           Highlight the found LCP section
-        </span> 
-      </div>
+        </span>
+      </div>`}
       <div class="lcp-tooltip-modal"></div>
     </div>
   `;

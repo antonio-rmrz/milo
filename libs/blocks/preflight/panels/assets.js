@@ -2,6 +2,7 @@ import { html, signal, useEffect } from '../../../deps/htm-preact.js';
 import { STATUS } from '../checks/constants.js';
 import { getPreflightResults } from '../checks/preflightApi.js';
 import { isViewportTooSmall } from '../checks/assets.js';
+import { setTabIssues } from '../preflight.js';
 
 // Define signals for check results and viewport status
 const assetDimensionsResult = signal({
@@ -13,6 +14,43 @@ const assetsWithMatch = signal([]);
 const criticalAssetFailures = signal([]);
 const warningAssetFailures = signal([]);
 const viewportTooSmall = signal(isViewportTooSmall());
+
+let reopenPreflight = null;
+
+function removeBackPopover() {
+  const existing = document.querySelector('.preflight-back-popover');
+  if (existing) existing.remove();
+}
+
+function injectBackPopover() {
+  removeBackPopover();
+  const popover = document.createElement('div');
+  popover.className = 'preflight-back-popover';
+  const btn = document.createElement('button');
+  btn.className = 'preflight-back-popover-btn';
+  btn.textContent = 'Back to Preflight';
+  btn.addEventListener('click', () => {
+    removeBackPopover();
+    if (reopenPreflight) reopenPreflight();
+  });
+  popover.appendChild(btn);
+  document.body.appendChild(popover);
+}
+
+function navigateToAsset(element) {
+  const modal = document.querySelector('.dialog-modal#preflight');
+  if (modal) {
+    const closeBtn = modal.querySelector('button.dialog-close');
+    if (closeBtn) {
+      reopenPreflight = () => closeBtn.click();
+      closeBtn.click();
+    }
+  }
+  setTimeout(() => {
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    injectBackPopover();
+  }, 100);
+}
 
 /**
  * Runs asset checks and updates signals with the results.
@@ -46,6 +84,10 @@ async function getResults() {
     criticalAssetFailures.value = result.details.criticalAssetFailures || [];
     warningAssetFailures.value = result.details.warningAssetFailures || [];
   }
+
+  const errors = criticalAssetFailures.value.length;
+  const warnings = warningAssetFailures.value.length;
+  setTabIssues('Assets', { errors, warnings });
 }
 
 /**
@@ -84,9 +126,14 @@ function AssetGroup({ group }) {
       ${assetArray.value.map((asset) => {
     const isAboveFoldWithMismatch = isCriticalGroup;
     const itemClass = isAboveFoldWithMismatch ? 'assets-image-grid-item above-fold-critical' : 'assets-image-grid-item';
+    const handleClick = asset.element ? () => navigateToAsset(asset.element) : undefined;
 
     return html`
-      <div class='${itemClass}' title='${isAboveFoldWithMismatch ? 'Above-the-fold asset with critical dimension issues' : ''}'>
+      <div
+        class='${itemClass}'
+        title='${isAboveFoldWithMismatch ? 'Above-the-fold asset with critical dimension issues' : ''}'
+        onClick=${handleClick}
+        style=${handleClick ? 'cursor:pointer' : ''}>
         ${asset.type === 'image' && html`<img src='${asset.src}' />`}
         ${asset.type === 'video' && html`<video controls src='${asset.src}' />`}
         ${asset.type === 'mpc' && html`<iframe src='${asset.src}' />`}
@@ -97,7 +144,7 @@ function AssetGroup({ group }) {
           ${asset.hasMismatch && html`<span>Recommended size: ${asset.recommendedDimensions}</span>`}
           <span>Type: ${asset.typeLabel}</span>
           ${asset.notes && html`<span><strong>Notes:</strong> ${asset.notes}</span>`}
-          ${isAboveFoldWithMismatch && html`<span class="above-fold-notice"><strong>⚠️ CRITICAL:</strong></span>`}
+          ${isAboveFoldWithMismatch && html`<span class="above-fold-notice"><strong>CRITICAL:</strong></span>`}
         </div>
       </div>`;
   })}

@@ -1,5 +1,6 @@
 import { html, signal, useEffect } from '../../../deps/htm-preact.js';
 import { checkUnpublishedFragments } from '../checks/merch.js';
+import { setTabIssues } from '../preflight.js';
 
 const wcsElements = signal([]);
 const masFieldsMultipleFragmentWarnings = signal([]);
@@ -56,6 +57,16 @@ function getBlockLocation(element) {
   return Math.round(rect.top + scrollTop);
 }
 
+function updateMerchBadge() {
+  const errors = wcsElements.value.filter((e) => e.urlStatus === 'error'
+    || e.promoCodeStatus === 'expired'
+    || e.promoCodeStatus === 'not-found').length
+    + unpublishedFragments.value.length;
+  const warnings = masFieldsMultipleFragmentWarnings.value.length
+    + wcsElements.value.filter((e) => e.urlStatus === 'undetermined').length;
+  setTabIssues('M@S', { errors, warnings });
+}
+
 function checkMasFieldsMultipleFragments() {
   const main = document.querySelector('main');
   main?.querySelectorAll(`.${MAS_MULTIPLE_FRAGMENTS_HIGHLIGHT}`).forEach((el) => el.classList.remove(MAS_MULTIPLE_FRAGMENTS_HIGHLIGHT));
@@ -96,6 +107,7 @@ function checkMasFieldsMultipleFragments() {
     }
   });
   masFieldsMultipleFragmentWarnings.value = warnings;
+  updateMerchBadge();
 }
 
 async function checkUnpublishedFragmentsForPanel() {
@@ -113,6 +125,7 @@ async function checkUnpublishedFragmentsForPanel() {
       location: firstCard ? getBlockLocation(firstCard) : 0,
     };
   });
+  updateMerchBadge();
 }
 
 function getService() {
@@ -263,6 +276,7 @@ async function checkWcsElements() {
 
   wcsElements.value = elements;
   loading.value = false;
+  updateMerchBadge();
 
   elements.forEach(async (elementData, index) => {
     if (elementData.href) {

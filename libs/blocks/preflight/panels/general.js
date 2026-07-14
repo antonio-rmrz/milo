@@ -1,8 +1,9 @@
 import { html, signal, useEffect } from '../../../deps/htm-preact.js';
-import { STATUS_TO_ICON_MAP, STRUCTURE_TITLES } from '../checks/constants.js';
+import { STATUS_TO_ICON_MAP, STATUS, STRUCTURE_TITLES } from '../checks/constants.js';
 import { runChecks as runStructureChecks } from '../checks/structure.js';
 import userCanPublishPage from '../../../tools/utils/publish.js';
 import { runChecks as runLocalizationChecks } from '../checks/localization.js';
+import { setTabIssues } from '../preflight.js';
 
 const DEF_NOT_FOUND = 'Not found';
 const DEF_NEVER = 'Never';
@@ -29,6 +30,18 @@ const localizationResult = signal({ icon: 'purple', title: 'Links', description:
 const localizationIssues = signal([]);
 const localizationClosed = signal(false);
 
+let structureErrors = 0;
+let structureWarnings = 0;
+let locErrors = 0;
+let locWarnings = 0;
+
+function updateGeneralBadge() {
+  setTabIssues('General', {
+    errors: structureErrors + locErrors,
+    warnings: structureWarnings + locWarnings,
+  });
+}
+
 async function getStructureResults() {
   const signals = [
     navResult,
@@ -47,6 +60,8 @@ async function getStructureResults() {
         title: res.title,
         description: res.description,
       };
+      if (res.status === STATUS.FAIL) structureErrors += 1;
+      else if (res.status === STATUS.LIMBO) structureWarnings += 1;
     })
     .catch((error) => {
       signals[index].value = {
@@ -54,7 +69,9 @@ async function getStructureResults() {
         title: 'Error',
         description: `Error: ${error.message}`,
       };
+      structureErrors += 1;
     })));
+  updateGeneralBadge();
 }
 
 async function getLocalizationResults() {
@@ -66,13 +83,18 @@ async function getLocalizationResults() {
       description: res.description,
     };
     localizationIssues.value = res.details?.violations || [];
+    const issueCount = localizationIssues.value.length;
+    if (res.status === STATUS.FAIL) locErrors = issueCount || 1;
+    else if (res.status === STATUS.LIMBO) locWarnings = issueCount || 1;
   } catch (error) {
     localizationResult.value = {
       icon: 'red',
       title: 'Links',
       description: `Error: ${error.message}`,
     };
+    locErrors += 1;
   }
+  updateGeneralBadge();
 }
 
 function getAdminUrl(url, type) {
