@@ -2,6 +2,7 @@ import { html, signal, useEffect } from '../../../deps/htm-preact.js';
 import { asoCache, getASOToken } from '../checks/asoApi.js';
 import { SEO_IDS, SEO_TITLES, STATUS, ASO_TIMEOUT_MS, ASO_POLL_INTERVAL_MS } from '../checks/constants.js';
 import { getChecksSuite, getPreflightResults } from '../checks/preflightApi.js';
+import { setTabBadge } from '../preflight-state.js';
 
 const DEF_ICON = 'purple';
 const DEF_DESC = 'Checking...';
@@ -121,17 +122,30 @@ export async function sendResults() {
   );
 }
 
+const ICON_TO_CHIP = {
+  green: 'pass',
+  red: 'fail',
+  orange: 'warn',
+  purple: 'loading',
+  empty: 'empty',
+};
+
 function SeoItem({ id, icon, title, description, supportsAi }) {
   const aiSuggestion = aiSuggestions.value.find((suggestion) => suggestion.id === id)?.aiSuggestion;
   const showLoadingAi = isAsoSuite.value && supportsAi && icon === 'red' && !aiSuggestion;
   const showAiSuggestion = supportsAi && aiSuggestion && icon === 'red';
+  const chipClass = ICON_TO_CHIP[icon] || 'empty';
+  const isLoading = chipClass === 'loading';
   return html`
     <div class=preflight-item>
-      <div class="result-icon ${icon}"></div>
+      ${isLoading
+    ? html`<div class="preflight-progress-ring"></div>`
+    : html`<div class="result-icon ${icon}"></div>`}
       <div class=preflight-item-text>
         <p class=preflight-item-title>${title}</p>
+        <span class="preflight-chip ${chipClass}">${chipClass}</span>
         <p class=preflight-item-description>${description}</p>
-         ${showLoadingAi && html`<p class="ai-suggestion">AI suggestion: <div class="result-icon purple"></div></p>`}
+        ${showLoadingAi && html`<p class="ai-suggestion">AI suggestion: <div class="result-icon purple"></div></p>`}
         ${showAiSuggestion && html`<p class="ai-suggestion">AI suggestion: ${aiSuggestion}</p>`}
       </div>
     </div>`;
@@ -173,6 +187,10 @@ async function getResults() {
   });
 
   await Promise.all(checkPromises);
+
+  const errors = icons.filter((icon) => icon === 'red').length;
+  const warnings = icons.filter((icon) => icon === 'orange').length;
+  if (errors || warnings) setTabBadge('SEO', errors, warnings);
 
   const red = icons.find((icon) => icon === 'red');
   if (!red) return;

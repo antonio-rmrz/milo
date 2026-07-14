@@ -3,6 +3,7 @@ import { STATUS_TO_ICON_MAP, STRUCTURE_TITLES } from '../checks/constants.js';
 import { runChecks as runStructureChecks } from '../checks/structure.js';
 import userCanPublishPage from '../../../tools/utils/publish.js';
 import { runChecks as runLocalizationChecks } from '../checks/localization.js';
+import { setTabBadge } from '../preflight-state.js';
 
 const DEF_NOT_FOUND = 'Not found';
 const DEF_NEVER = 'Never';
@@ -65,7 +66,11 @@ async function getLocalizationResults() {
       title: res.title,
       description: res.description,
     };
-    localizationIssues.value = res.details?.violations || [];
+    const issues = res.details?.violations || [];
+    localizationIssues.value = issues;
+    const errCount = issues.filter((v) => v.usStatus >= 400 || !v.isLocalized).length;
+    const warnCount = issues.length - errCount;
+    if (issues.length) setTabBadge('General', errCount || 0, warnCount || 0);
   } catch (error) {
     localizationResult.value = {
       icon: 'red',
@@ -300,12 +305,26 @@ function ContentGroup({ name, group }) {
     </div>`;
 }
 
+const ICON_TO_CHIP = {
+  green: 'pass',
+  red: 'fail',
+  orange: 'warn',
+  purple: 'loading',
+  empty: 'empty',
+  'alt-text': 'pass',
+};
+
 function StructureItem({ icon, title, description }) {
+  const chipClass = ICON_TO_CHIP[icon] || 'empty';
+  const isLoading = chipClass === 'loading';
   return html`
     <div class="preflight-item">
-      <div class="result-icon ${icon}"></div>
+      ${isLoading
+    ? html`<div class="preflight-progress-ring"></div>`
+    : html`<div class="result-icon ${icon}"></div>`}
       <div class="preflight-item-text">
         <p class="preflight-item-title">${title}</p>
+        <span class="preflight-chip ${chipClass}">${chipClass}</span>
         <p class="preflight-item-description">${description}</p>
       </div>
     </div>`;
