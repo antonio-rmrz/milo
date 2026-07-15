@@ -57,4 +57,11 @@ describe('Preflight Assets Panel', () => {
     expect(container.querySelector('.assets-item-title')).to.exist;
     expect(container.querySelector('.assets-item-description')).to.exist;
   });
+
+  it('renders the back-to-preflight popover container slot', () => {
+    render(html`<${Assets} />`, container);
+    // BackToPreflightPopover is hidden by default (backToPreflightVisible = false)
+    const popover = container.querySelector('.back-to-preflight-popover');
+    expect(popover).to.not.exist;
+  });
 });

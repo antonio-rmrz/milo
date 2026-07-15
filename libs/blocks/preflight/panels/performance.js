@@ -1,10 +1,10 @@
 import { html, signal, useEffect } from '../../../deps/htm-preact.js';
 import preflightApi from '../checks/preflightApi.js';
-import { STATUS_TO_ICON_MAP } from '../checks/constants.js';
+import { STATUS, STATUS_TO_ICON_MAP } from '../checks/constants.js';
+import { setTabBadge } from '../preflight.js';
 
 const { getLcpEntry, runChecks } = preflightApi.performance;
 
-// Define signals for each performance check result
 const lcpElResult = signal({ icon: 'purple', title: 'Valid LCP', description: 'Checking...' });
 const singleBlockResult = signal({ icon: 'purple', title: 'Single Block', description: 'Checking...' });
 const imageSizeResult = signal({ icon: 'purple', title: 'Images size', description: 'Checking...' });
@@ -13,10 +13,8 @@ const fragmentsResult = signal({ icon: 'purple', title: 'Fragments', description
 const personalizationResult = signal({ icon: 'purple', title: 'Personalization', description: 'Checking...' });
 const placeholdersResult = signal({ icon: 'purple', title: 'Placeholders', description: 'Checking...' });
 const iconsResult = signal({ icon: 'purple', title: 'Icons', description: 'Checking...' });
+const lcpHasElement = signal(false);
 
-/**
- * Runs performance checks and updates signals with the results.
- */
 async function getResults() {
   const signals = [
     lcpElResult,
@@ -30,6 +28,9 @@ async function getResults() {
   ];
   const checks = runChecks(window.location.pathname, document);
 
+  let errorCount = 0;
+  let warningCount = 0;
+
   const checkPromises = checks.map((resultOrPromise, index) => {
     const signalResult = signals[index];
     return Promise.resolve(resultOrPromise)
@@ -39,7 +40,12 @@ async function getResults() {
           icon,
           title: result.title.replace('Performance - ', ''),
           description: result.description,
+          status: result.status,
         };
+        if (result.status === STATUS.FAIL) {
+          if (result.severity === 'CRITICAL') errorCount += 1;
+          else warningCount += 1;
+        }
       })
       .catch((error) => {
         signalResult.value = {
@@ -47,15 +53,17 @@ async function getResults() {
           title: 'Error',
           description: `Error: ${error.message}`,
         };
+        errorCount += 1;
       });
   });
 
   await Promise.all(checkPromises);
+  setTabBadge('Performance', errorCount, warningCount);
+
+  const lcp = await getLcpEntry(window.location.pathname, document).catch(() => null);
+  lcpHasElement.value = !!(lcp && lcp.element);
 }
 
-/**
- * Component to display a single performance check result.
- */
 function PerformanceItem({ icon, title, description }) {
   return html`
     <div class="preflight-item">
@@ -67,15 +75,14 @@ function PerformanceItem({ icon, title, description }) {
     </div>`;
 }
 
-/**
- * LCP Highlighting Functionality
- */
 let clonedLcpSection;
 async function highlightElement(event) {
   const lcp = await getLcpEntry(window.location.pathname, document);
-  if (!lcp) return;
+  if (!lcp || !lcp.element) return;
   const lcpSection = lcp.element.closest('.section');
+  if (!lcpSection) return;
   const tooltip = document.querySelector('.lcp-tooltip-modal');
+  if (!tooltip) return;
   const { offsetHeight, offsetWidth } = lcpSection;
   const scaleFactor = Math.min(500 / offsetWidth, 500 / offsetHeight);
 
@@ -101,16 +108,13 @@ async function highlightElement(event) {
     left: `${left + window.scrollX}px`,
   });
 
-  document.querySelector('.lcp-tooltip-modal').classList.add('show');
+  tooltip.classList.add('show');
 }
 
 const removeHighlight = () => {
-  document.querySelector('.lcp-tooltip-modal').classList.remove('show');
+  document.querySelector('.lcp-tooltip-modal')?.classList.remove('show');
 };
 
-/**
- * Main Panel Component
- */
 export default function Panel() {
   useEffect(() => {
     getResults();
@@ -131,12 +135,14 @@ export default function Panel() {
         <${PerformanceItem} ...${iconsResult.value} />
       </div>
       <div>Unsure on how to get this page fully into the green? Check out the <a class="performance-guidelines" href="https://milo.adobe.com/docs/authoring/performance/" target="_blank">Milo Performance Guidelines</a>.</div>
-      <div> 
-        <span class="performance-element-preview" onMouseEnter=${highlightElement} onMouseLeave=${removeHighlight}>
-          Highlight the found LCP section
-        </span> 
-      </div>
-      <div class="lcp-tooltip-modal"></div>
+      ${lcpHasElement.value && html`
+        <div>
+          <span class="performance-element-preview" onMouseEnter=${highlightElement} onMouseLeave=${removeHighlight}>
+            Highlight the found LCP section
+          </span>
+        </div>
+        <div class="lcp-tooltip-modal"></div>
+      `}
     </div>
   `;
 }

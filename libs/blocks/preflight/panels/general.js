@@ -1,8 +1,9 @@
 import { html, signal, useEffect } from '../../../deps/htm-preact.js';
-import { STATUS_TO_ICON_MAP, STRUCTURE_TITLES } from '../checks/constants.js';
+import { STATUS, STATUS_TO_ICON_MAP, STRUCTURE_TITLES } from '../checks/constants.js';
 import { runChecks as runStructureChecks } from '../checks/structure.js';
 import userCanPublishPage from '../../../tools/utils/publish.js';
 import { runChecks as runLocalizationChecks } from '../checks/localization.js';
+import { setTabBadge } from '../preflight.js';
 
 const DEF_NOT_FOUND = 'Not found';
 const DEF_NEVER = 'Never';
@@ -29,6 +30,8 @@ const localizationResult = signal({ icon: 'purple', title: 'Links', description:
 const localizationIssues = signal([]);
 const localizationClosed = signal(false);
 
+let structureErrorCount = 0;
+
 async function getStructureResults() {
   const signals = [
     navResult,
@@ -38,6 +41,7 @@ async function getStructureResults() {
     breadcrumbsResult,
   ];
   const checks = runStructureChecks({ area: document });
+  structureErrorCount = 0;
 
   await Promise.all(checks.map((result, index) => Promise.resolve(result)
     .then((res) => {
@@ -47,6 +51,7 @@ async function getStructureResults() {
         title: res.title,
         description: res.description,
       };
+      if (res.status === STATUS.FAIL) structureErrorCount += 1;
     })
     .catch((error) => {
       signals[index].value = {
@@ -54,6 +59,7 @@ async function getStructureResults() {
         title: 'Error',
         description: `Error: ${error.message}`,
       };
+      structureErrorCount += 1;
     })));
 }
 
@@ -73,6 +79,8 @@ async function getLocalizationResults() {
       description: `Error: ${error.message}`,
     };
   }
+  const locErrors = localizationIssues.value.length;
+  setTabBadge('General', structureErrorCount + locErrors, 0);
 }
 
 function getAdminUrl(url, type) {

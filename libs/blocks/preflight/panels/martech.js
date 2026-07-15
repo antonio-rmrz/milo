@@ -7,16 +7,25 @@ const btnText = signal('Copy Table');
 
 function getTable(strings) {
   const table = document.createElement('table');
-  table.setAttribute('border', 1);
+  table.className = 'preflight-martech-table';
+  const thead = document.createElement('thead');
   const headerRow = document.createElement('tr');
-  headerRow.append(createTag('th', { colspan: 2, style: 'width: 100%' }, 'martech metadata'));
-  table.append(headerRow);
+  const th = document.createElement('th');
+  th.setAttribute('colspan', '2');
+  th.style.width = '100%';
+  th.textContent = 'Martech Metadata';
+  headerRow.appendChild(th);
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
   [...strings].forEach((str) => {
     const tr = document.createElement('tr');
     tr.append(createTag('td', { colspan: 1 }, createTag('h3', {}, str)));
     tr.append(createTag('td', { colspan: 1 }, createTag('h3', { 'data-ccp-parastyle': 'DNT' }, str)));
-    table.append(tr);
+    tbody.append(tr);
   });
+  table.appendChild(tbody);
   return table.outerHTML;
 }
 
@@ -35,12 +44,11 @@ async function checkMartechMeta() {
 
 function copyTable() {
   try {
-    /* global ClipboardItem */
     const clipboardData = [new ClipboardItem({ 'text/html': new Blob([martechBlock.value], { type: 'text/html' }) })];
     navigator.clipboard.write(clipboardData);
-    btnText.value = '✔ Copied!';
+    btnText.value = 'Copied!';
   } catch (e) {
-    btnText.value = 'ⓧ Error Copying';
+    btnText.value = 'Error Copying';
     /* eslint-disable-next-line no-console */
     console.error(e);
   }

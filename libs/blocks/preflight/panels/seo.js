@@ -2,6 +2,7 @@ import { html, signal, useEffect } from '../../../deps/htm-preact.js';
 import { asoCache, getASOToken } from '../checks/asoApi.js';
 import { SEO_IDS, SEO_TITLES, STATUS, ASO_TIMEOUT_MS, ASO_POLL_INTERVAL_MS } from '../checks/constants.js';
 import { getChecksSuite, getPreflightResults } from '../checks/preflightApi.js';
+import { setTabBadge } from '../preflight.js';
 
 const DEF_ICON = 'purple';
 const DEF_DESC = 'Checking...';
@@ -173,6 +174,10 @@ async function getResults() {
   });
 
   await Promise.all(checkPromises);
+
+  const errorCount = icons.filter((icon) => icon === 'red').length;
+  const warningCount = icons.filter((icon) => icon === 'orange').length;
+  setTabBadge('SEO', errorCount, warningCount);
 
   const red = icons.find((icon) => icon === 'red');
   if (!red) return;

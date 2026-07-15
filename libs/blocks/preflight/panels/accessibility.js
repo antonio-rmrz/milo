@@ -1,5 +1,6 @@
 import { html, signal, useEffect } from '../../../deps/htm-preact.js';
 import { createTag } from '../../../utils/utils.js';
+import { setTabBadge } from '../preflight.js';
 
 const DEF_DESC = 'Checking...';
 const decorativeImages = signal([]);
@@ -106,6 +107,7 @@ export async function checkAlt() {
   });
   result.description = 'All images listed below. Please validate each alt text has been set appropriately. Decorative images have been highlighted in yellow on the page.';
   altResult.value = { ...result, checked: true };
+  setTabBadge('Accessibility', 0, decorativeImages.value.length);
   // eslint-disable-next-line consistent-return
   return {
     decorativeImages: decorativeImages.value,

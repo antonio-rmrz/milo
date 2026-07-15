@@ -2,9 +2,20 @@ import { getPreflightResults } from '../blocks/preflight/checks/preflightApi.js'
 import { loadStyle, getConfig } from './utils.js';
 
 let wasDismissed = false;
+let isPreflightOpen = false;
 let sidekickObserver;
 let linkCheckListener;
 const sidekick = document.querySelector('aem-sidekick, helix-sidekick');
+
+document.addEventListener('preflight:open', () => {
+  isPreflightOpen = true;
+  document.querySelector('.milo-preflight-overlay')?.remove();
+});
+
+document.addEventListener('preflight:close', () => {
+  isPreflightOpen = false;
+});
+
 function openPreflightPanel() {
   if (!sidekick) return;
   sidekick.dispatchEvent(new CustomEvent('custom:preflight', { bubbles: true }));
@@ -19,6 +30,7 @@ function getMasUnpublishedCount(results) {
 }
 
 async function createPreflightNotification(masUnpublishedCount = 0) {
+  if (isPreflightOpen) return;
   const existingNotification = document.querySelector('.milo-preflight-overlay');
   if (existingNotification) return;
   const { miloLibs, codeRoot } = getConfig();
@@ -66,7 +78,7 @@ function setupLinkCheckListener() {
   linkCheckListener = async (event) => {
     const { hasFailures } = event.detail;
 
-    if (hasFailures && !wasDismissed) {
+    if (hasFailures && !wasDismissed && !isPreflightOpen) {
       const existingNotification = document.querySelector('.milo-preflight-overlay');
       const isPublishButtonDisabled = sidekick?.shadowRoot
         ?.querySelector('plugin-action-bar')?.shadowRoot
@@ -85,6 +97,10 @@ function createObserver() {
   if (sidekickObserver) return;
   sidekickObserver = new MutationObserver(async () => {
     if (wasDismissed || !sidekick) return;
+    if (isPreflightOpen) {
+      document.querySelector('.milo-preflight-overlay')?.remove();
+      return;
+    }
     if (sidekick.getAttribute('open') !== 'true') {
       document.querySelector('.milo-preflight-overlay')?.remove();
       return;
@@ -109,7 +125,7 @@ export default async function show() {
     area: document,
   }).catch(() => null);
 
-  if (wasDismissed || document.querySelector('.milo-preflight-overlay')) return;
+  if (wasDismissed || isPreflightOpen || document.querySelector('.milo-preflight-overlay')) return;
 
   const isPublishButtonDisabled = sidekick?.shadowRoot
     ?.querySelector('plugin-action-bar')?.shadowRoot

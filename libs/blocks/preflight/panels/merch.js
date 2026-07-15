@@ -1,5 +1,6 @@
 import { html, signal, useEffect } from '../../../deps/htm-preact.js';
 import { checkUnpublishedFragments } from '../checks/merch.js';
+import { setTabBadge } from '../preflight.js';
 
 const wcsElements = signal([]);
 const masFieldsMultipleFragmentWarnings = signal([]);
@@ -113,6 +114,12 @@ async function checkUnpublishedFragmentsForPanel() {
       location: firstCard ? getBlockLocation(firstCard) : 0,
     };
   });
+
+  const errorCount = unpublishedFragments.value.length
+    + wcsElements.value.filter((e) => e.urlStatus === 'error' || e.promoCodeStatus === 'expired' || e.promoCodeStatus === 'not-found').length;
+  const warningCount = wcsElements.value.filter((e) => e.urlStatus === 'undetermined').length
+    + masFieldsMultipleFragmentWarnings.value.length;
+  setTabBadge('M@S', errorCount, warningCount);
 }
 
 function getService() {
