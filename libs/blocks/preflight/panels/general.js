@@ -1,5 +1,5 @@
 import { html, signal, useEffect } from '../../../deps/htm-preact.js';
-import { STATUS_TO_ICON_MAP, STRUCTURE_TITLES } from '../checks/constants.js';
+import { STATUS, STATUS_TO_ICON_MAP, STRUCTURE_TITLES } from '../checks/constants.js';
 import { runChecks as runStructureChecks } from '../checks/structure.js';
 import userCanPublishPage from '../../../tools/utils/publish.js';
 import { runChecks as runLocalizationChecks } from '../checks/localization.js';
@@ -29,6 +29,14 @@ const localizationResult = signal({ icon: 'purple', title: 'Links', description:
 const localizationIssues = signal([]);
 const localizationClosed = signal(false);
 
+const structureFailCount = signal(0);
+
+function updateGeneralBadge() {
+  const fails = structureFailCount.value + localizationIssues.value.length;
+  const detail = { title: 'General', count: fails, type: 'error' };
+  document.dispatchEvent(new CustomEvent('preflight:badge', { detail }));
+}
+
 async function getStructureResults() {
   const signals = [
     navResult,
@@ -46,6 +54,7 @@ async function getStructureResults() {
         icon,
         title: res.title,
         description: res.description,
+        status: res.status,
       };
     })
     .catch((error) => {
@@ -53,8 +62,13 @@ async function getStructureResults() {
         icon: 'red',
         title: 'Error',
         description: `Error: ${error.message}`,
+        status: STATUS.FAIL,
       };
     })));
+
+  const failCount = signals.filter((s) => s.value.status === STATUS.FAIL).length;
+  structureFailCount.value = failCount;
+  updateGeneralBadge();
 }
 
 async function getLocalizationResults() {
@@ -64,6 +78,7 @@ async function getLocalizationResults() {
       icon: STATUS_TO_ICON_MAP[res.status] || 'orange',
       title: res.title,
       description: res.description,
+      status: res.status,
     };
     localizationIssues.value = res.details?.violations || [];
   } catch (error) {
@@ -71,8 +86,10 @@ async function getLocalizationResults() {
       icon: 'red',
       title: 'Links',
       description: `Error: ${error.message}`,
+      status: STATUS.FAIL,
     };
   }
+  updateGeneralBadge();
 }
 
 function getAdminUrl(url, type) {
@@ -300,14 +317,23 @@ function ContentGroup({ name, group }) {
     </div>`;
 }
 
+function iconToChipStatus(icon) {
+  if (icon === 'green') return 'pass';
+  if (icon === 'red') return 'fail';
+  if (icon === 'orange') return 'warn';
+  if (icon === 'purple') return 'loading';
+  return 'empty';
+}
+
 function StructureItem({ icon, title, description }) {
+  const chipStatus = iconToChipStatus(icon);
   return html`
-    <div class="preflight-item">
-      <div class="result-icon ${icon}"></div>
-      <div class="preflight-item-text">
+    <div class="preflight-check-card preflight-item">
+      <div class="preflight-check-card-body">
         <p class="preflight-item-title">${title}</p>
         <p class="preflight-item-description">${description}</p>
       </div>
+      <span class="status-chip" data-status=${chipStatus}>${chipStatus}</span>
     </div>`;
 }
 

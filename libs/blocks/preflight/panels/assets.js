@@ -3,7 +3,6 @@ import { STATUS } from '../checks/constants.js';
 import { getPreflightResults } from '../checks/preflightApi.js';
 import { isViewportTooSmall } from '../checks/assets.js';
 
-// Define signals for check results and viewport status
 const assetDimensionsResult = signal({
   title: 'Asset Dimensions',
   description: 'Checking...',
@@ -14,9 +13,6 @@ const criticalAssetFailures = signal([]);
 const warningAssetFailures = signal([]);
 const viewportTooSmall = signal(isViewportTooSmall());
 
-/**
- * Runs asset checks and updates signals with the results.
- */
 async function getResults() {
   const results = await getPreflightResults({
     url: window.location.pathname,
@@ -25,7 +21,7 @@ async function getResults() {
     injectVisualMetadata: false,
   });
 
-  if (!results) return; // Page is excluded from preflight checks
+  if (!results) return;
 
   const checks = results.runChecks.assets || [];
 
@@ -48,72 +44,104 @@ async function getResults() {
   }
 }
 
-/**
- * Component to display a single asset check result.
- */
+function removeBackPopover() {
+  document.querySelector('.preflight-back-popover')?.remove();
+}
+
+function navigateToAsset(asset) {
+  const preflightEl = document.querySelector('#preflight');
+  const closeBtn = preflightEl?.querySelector('.dialog-close');
+  if (closeBtn) {
+    closeBtn.click();
+  } else if (preflightEl) {
+    preflightEl.remove();
+    document.querySelector('#preflight~.modal-curtain')?.remove();
+    document.body.classList.remove('disable-scroll');
+    document.querySelectorAll('header, main, footer').forEach((el) => el.removeAttribute('aria-disabled'));
+  }
+
+  const el = asset.element
+    || document.querySelector(`img[src*="${(asset.src || '').split('/').pop()}"]`);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  removeBackPopover();
+
+  const popover = document.createElement('div');
+  popover.className = 'preflight-back-popover';
+  const btn = document.createElement('button');
+  btn.textContent = 'Back to Preflight';
+  btn.addEventListener('click', () => {
+    removeBackPopover();
+    const sk = document.querySelector('aem-sidekick, helix-sidekick');
+    if (sk) {
+      sk.dispatchEvent(new CustomEvent('custom:preflight', { bubbles: true }));
+    }
+  });
+  popover.appendChild(btn);
+  document.body.appendChild(popover);
+}
+
 function AssetsItem({ title, description }) {
   return html`
     <div class="assets-item">
-      <div class="assets-item-text">
-        <p class="assets-item-title">${title}</p>
-        <p class="assets-item-description">${description}</p>
+      <p class="assets-item-title">${title}</p>
+      <p class="assets-item-description">${description}</p>
+    </div>`;
+}
+
+function AssetRow({ asset, isCritical }) {
+  const rowClass = `preflight-asset-row${isCritical ? ' is-critical' : ''}`;
+  return html`
+    <div class=${rowClass} onClick=${() => navigateToAsset(asset)}
+      title=${isCritical ? 'Above-the-fold asset with critical dimension issues' : 'Click to navigate to asset'}>
+      ${asset.type === 'image' && html`<img class="preflight-asset-thumb" src=${asset.src} alt="" />`}
+      ${asset.type !== 'image' && html`<div class="preflight-asset-thumb"></div>`}
+      <div class="preflight-asset-metrics">
+        <span><strong>Factor:</strong> ${asset.roundedFactor}</span>
+        <span><strong>Upload:</strong> ${asset.naturalDimensions}</span>
+        <span><strong>Display:</strong> ${asset.displayDimensions}</span>
+        ${isCritical && html`<span class="preflight-asset-critical-label">Critical</span>`}
       </div>
     </div>`;
 }
 
-/**
- * Component to display a group of assets.
- */
 function AssetGroup({ group }) {
-  const { title, assetArray } = group;
-  const isCriticalGroup = title.includes('Critical');
+  const { title, assetArray, isCritical } = group;
+
+  if (viewportTooSmall.value) {
+    return html`
+      <div class="grid-heading">
+        <div class="grid-toggle">${title}</div>
+      </div>
+      <div class="assets-image-grid">
+        <div class="assets-image-grid-item full-width">Please resize your browser to at least 1200px width to run image checks</div>
+      </div>
+    `;
+  }
+
+  if (assetArray.value.length === 0) {
+    return html`
+      <div class="grid-heading">
+        <div class="grid-toggle">${title}</div>
+      </div>
+      <div class="assets-image-grid">
+        <div class="assets-image-grid-item full-width">No assets found</div>
+      </div>
+    `;
+  }
 
   return html`
     <div class="grid-heading">
       <div class="grid-toggle">${title}</div>
     </div>
-
-    ${viewportTooSmall.value && html`
-      <div class='assets-image-grid'>
-        <div class='assets-image-grid-item full-width'>Please resize your browser to at least 1200px width to run image checks</div>
-      </div>
-    `}
-
-    ${!viewportTooSmall.value && assetArray.value.length > 0 && html`
-    <div class='assets-image-grid'>
-      ${assetArray.value.map((asset) => {
-    const isAboveFoldWithMismatch = isCriticalGroup;
-    const itemClass = isAboveFoldWithMismatch ? 'assets-image-grid-item above-fold-critical' : 'assets-image-grid-item';
-
-    return html`
-      <div class='${itemClass}' title='${isAboveFoldWithMismatch ? 'Above-the-fold asset with critical dimension issues' : ''}'>
-        ${asset.type === 'image' && html`<img src='${asset.src}' />`}
-        ${asset.type === 'video' && html`<video controls src='${asset.src}' />`}
-        ${asset.type === 'mpc' && html`<iframe src='${asset.src}' />`}
-        <div class='assets-image-grid-item-text'>
-          <span>Factor: ${asset.roundedFactor}</span>
-          <span>Upload size: ${asset.naturalDimensions}</span>
-          <span>Display size: ${asset.displayDimensions}</span>
-          ${asset.hasMismatch && html`<span>Recommended size: ${asset.recommendedDimensions}</span>`}
-          <span>Type: ${asset.typeLabel}</span>
-          ${asset.notes && html`<span><strong>Notes:</strong> ${asset.notes}</span>`}
-          ${isAboveFoldWithMismatch && html`<span class="above-fold-notice"><strong>⚠️ CRITICAL:</strong></span>`}
-        </div>
-      </div>`;
-  })}
-    </div>`}
-
-    ${!viewportTooSmall.value && assetArray.value.length === 0 && html`
-      <div class='assets-image-grid'>
-        <div class='assets-image-grid-item full-width'>No assets found</div>
-      </div>
-    `}
+    <div class="assets-image-grid">
+      ${assetArray.value.map((asset) => html`<${AssetRow} asset=${asset} isCritical=${!!isCritical} />`)}
+    </div>
   `;
 }
 
-/**
- * Main Panel Component
- */
 export default function Assets() {
   useEffect(() => {
     let resizeTimeout;
@@ -139,9 +167,9 @@ export default function Assets() {
   }, []);
 
   const groups = [
-    { title: 'Critical Asset Issues (Above-the-fold)', assetArray: criticalAssetFailures },
-    { title: 'Warning Asset Issues (Below-the-fold)', assetArray: warningAssetFailures },
-    { title: 'Assets with matching dimensions', assetArray: assetsWithMatch },
+    { title: 'Critical Asset Issues (Above-the-fold)', assetArray: criticalAssetFailures, isCritical: true },
+    { title: 'Warning Asset Issues (Below-the-fold)', assetArray: warningAssetFailures, isCritical: false },
+    { title: 'Assets with matching dimensions', assetArray: assetsWithMatch, isCritical: false },
   ];
 
   return html`

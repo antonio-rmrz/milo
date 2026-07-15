@@ -7,16 +7,22 @@ const btnText = signal('Copy Table');
 
 function getTable(strings) {
   const table = document.createElement('table');
-  table.setAttribute('border', 1);
+  table.className = 'preflight-martech-table';
+  const thead = document.createElement('thead');
   const headerRow = document.createElement('tr');
-  headerRow.append(createTag('th', { colspan: 2, style: 'width: 100%' }, 'martech metadata'));
-  table.append(headerRow);
+  const th1 = createTag('th', {}, 'Text');
+  const th2 = createTag('th', {}, 'DNT Copy');
+  headerRow.append(th1, th2);
+  thead.append(headerRow);
+  table.append(thead);
+  const tbody = document.createElement('tbody');
   [...strings].forEach((str) => {
     const tr = document.createElement('tr');
-    tr.append(createTag('td', { colspan: 1 }, createTag('h3', {}, str)));
-    tr.append(createTag('td', { colspan: 1 }, createTag('h3', { 'data-ccp-parastyle': 'DNT' }, str)));
-    table.append(tr);
+    tr.append(createTag('td', {}, str));
+    tr.append(createTag('td', { 'data-ccp-parastyle': 'DNT' }, str));
+    tbody.append(tr);
   });
+  table.append(tbody);
   return table.outerHTML;
 }
 
@@ -35,7 +41,6 @@ async function checkMartechMeta() {
 
 function copyTable() {
   try {
-    /* global ClipboardItem */
     const clipboardData = [new ClipboardItem({ 'text/html': new Blob([martechBlock.value], { type: 'text/html' }) })];
     navigator.clipboard.write(clipboardData);
     btnText.value = '✔ Copied!';
@@ -54,7 +59,7 @@ export default function Martech() {
   useEffect(() => { checkMartechMeta(); }, []);
 
   return html`
-  <div class="access-columns martech">
+  <div class="martech">
     ${martechBlock.value && html`
       <button class="preflight-action" onclick=${copyTable}>${btnText.value}</button>
       <div dangerouslySetInnerHTML="${{ __html: martechBlock.value }}"></div>

@@ -1,5 +1,4 @@
 import { html, render, signal } from '../../deps/htm-preact.js';
-import { createTag, getConfig } from '../../utils/utils.js';
 import General from './panels/general.js';
 import SEO from './panels/seo.js';
 import Accessibility from './accessibility/accessibility.js';
@@ -7,9 +6,6 @@ import Martech from './panels/martech.js';
 import Merch from './panels/merch.js';
 import Performance from './panels/performance.js';
 import Assets from './panels/assets.js';
-
-const HEADING = 'Milo Preflight';
-const IMG_PATH = '/blocks/preflight/img';
 
 const tabs = signal([
   { title: 'General', selected: true },
@@ -20,6 +16,17 @@ const tabs = signal([
   { title: 'Performance' },
   { title: 'Assets' },
 ]);
+
+const tabBadges = signal({});
+
+export function updateTabBadge(title, count, type) {
+  tabBadges.value = { ...tabBadges.value, [title]: { count, type } };
+}
+
+function handleBadgeEvent(e) {
+  const { title, count, type } = e.detail;
+  updateTabBadge(title, count, type);
+}
 
 function setTab(active) {
   tabs.value = tabs.value.map((tab) => {
@@ -49,17 +56,24 @@ function setPanel(title) {
   }
 }
 
-function TabButton(props) {
+function NavButton(props) {
   const id = `tab-${props.idx + 1}`;
   const selected = props.tab.selected === true;
+  const badge = tabBadges.value[props.tab.title];
+  const hasCount = badge && badge.count > 0;
+  let badgeClass = 'preflight-nav-badge';
+  if (hasCount) badgeClass = badge.type === 'error' ? 'preflight-nav-badge badge-error' : 'preflight-nav-badge badge-warn';
+
   return html`
     <button
       id=${id}
-      class=preflight-tab-button
+      class="preflight-nav-btn"
       key=${props.tab.title}
       aria-selected=${selected}
+      role="tab"
       onClick=${() => setTab(props.tab)}>
       ${props.tab.title}
+      ${hasCount && html`<span class=${badgeClass}>${badge.count}</span>`}
     </button>`;
 }
 
@@ -71,7 +85,7 @@ function TabPanel(props) {
   return html`
     <div
       id=${id}
-      class=preflight-tab-panel
+      class="preflight-tab-panel"
       aria-labelledby=${labeledBy}
       key=${props.tab.title}
       aria-selected=${selected}
@@ -82,37 +96,47 @@ function TabPanel(props) {
 
 function Preflight() {
   return html`
-    <div class=preflight-heading>
-      <p id=preflight-title>${HEADING}</p>
-      <div class=preflight-tab-button-group role="tablist" aria-labelledby=preflight-title>
-        ${tabs.value.map((tab, idx) => html`<${TabButton} tab=${tab} idx=${idx} />`)}
-      </div>
-    </div>
-    <div class=preflight-content>
+    <nav class="preflight-nav-rail" role="tablist" aria-label="Preflight sections">
+      ${tabs.value.map((tab, idx) => html`<${NavButton} tab=${tab} idx=${idx} />`)}
+    </nav>
+    <div class="preflight-content">
       ${tabs.value.map((tab, idx) => html`<${TabPanel} tab=${tab} idx=${idx} />`)}
     </div>
   `;
 }
 
-function preloadAssets(el) {
-  return new Promise((resolve) => {
-    const { miloLibs, codeRoot } = getConfig();
-    const base = miloLibs || codeRoot;
-    const bg = createTag('img', { src: `${base}${IMG_PATH}/preflight-bg.png` });
-    const pic = createTag('picture', { class: 'bg-img' }, bg);
-    bg.addEventListener('load', () => {
-      resolve(pic);
-      el.insertAdjacentElement('afterbegin', pic);
+function dismissNotification() {
+  document.querySelector('.milo-preflight-overlay')?.remove();
+}
 
-      // Lazily load other images
-      const check = createTag('link', { rel: 'preload', as: 'image', href: `${base}${IMG_PATH}/check.svg` });
-      const expand = createTag('link', { rel: 'preload', as: 'image', href: `${base}${IMG_PATH}/expand.svg` });
-      document.head.append(check, expand);
-    });
+function suppressNotificationWhileOpen(dialogEl) {
+  window.preflightNotificationSuppressed = () => true;
+
+  const cleanup = () => {
+    window.preflightNotificationSuppressed = null;
+  };
+
+  dialogEl.addEventListener('close', cleanup, { once: true });
+
+  const observer = new MutationObserver(() => {
+    if (!document.body.contains(dialogEl)) {
+      cleanup();
+      observer.disconnect();
+    }
   });
+
+  observer.observe(document.body, { childList: true, subtree: false });
 }
 
 export default async function init(el) {
-  await preloadAssets(el);
+  dismissNotification();
+  const dialogEl = el.closest('dialog') || el;
+  suppressNotificationWhileOpen(dialogEl);
+
+  document.addEventListener('preflight:badge', handleBadgeEvent);
+  dialogEl.addEventListener('close', () => {
+    document.removeEventListener('preflight:badge', handleBadgeEvent);
+  }, { once: true });
+
   render(html`<${Preflight} />`, el);
 }
