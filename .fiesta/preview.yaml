@@ -41,7 +41,11 @@ local:
   consumer_overlay:
     own_hosts: ['--milo--']
     params: 'milolibs=local&martech=off'
-    host_swap: { '.aem.page': '.aem.live' }
+  # Gated consumer previews are served through a local authenticated proxy.
+  # The engine fills {port}; the token comes from the named env var.
+  proxy:
+    cmd: 'aem up --port={port} --no-open --no-livereload --stop-other --url=https://{host} --site-token={token}'
+    url: 'http://localhost:{port}{page}'
 
 # Hosts that carry Milo's pages when a requester pastes a URL in the ticket.
 # Milo ships as a library: real repro URLs usually live on CONSUMER sites that
@@ -56,15 +60,14 @@ local:
 # (vs 60s on .page), so a .live capture can photograph up-to-2h-stale code —
 # two MWPW-198935 runs blanked on exactly that (poisoned br variants). Pasted
 # .live URLs are swapped BACK to the preview host at capture time. da-dc /
-# da-bacom .page previews are IMS-gated: until the harness automation account
-# is allowlisted for those sites (see auth_profiles below), captures there
-# fail honestly (HTTP 401 → escalate) instead of photographing .live.
+# da-bacom .page previews are proxied locally now, with an operator site
+# token; the allowlist path stays available via auth: on capture_hosts.
 capture_hosts:
   - '--milo--adobecom.aem.page'    # milo's own upstream previews
-  - '--da-dc--adobecom.aem.page'   # DC consumer pages (MWPW-198935 class)
-  # bacom consumer pages (MWPW-193755 class — pasted query params like
-  # country= survive the milolibs merge).
-  - '--da-bacom--adobecom.aem.page'
+  - host: '--da-dc--adobecom.aem.page'
+    proxy: { token_env: AEM_SITE_TOKEN_DA_DC }
+  - host: '--da-bacom--adobecom.aem.page'
+    proxy: { token_env: AEM_SITE_TOKEN_DA_BACOM }
   - host: '--da-dc--adobecom.aem.live'     # pasted publish-host URLs
     capture_on: '--da-dc--adobecom.aem.page'
   - host: '--da-bacom--adobecom.aem.live'
