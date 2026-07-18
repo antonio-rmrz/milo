@@ -31,9 +31,8 @@ local:
   # Foreign consumer pages (da-dc/bacom/cc/upp — anything that CONSUMES Milo via
   # ?milolibs=): keep the page REMOTE on its public content host and source THIS
   # branch's libs from the local dev server via milolibs=local (the consumer's
-  # own setLibs maps `local` → localhost:6456). No fork code-bus, no site auth
-  # (public .aem.live content), no CDN races. host_swap rewrites the pasted
-  # preview host (.aem.page, gated) to the public content host (.aem.live).
+  # own setLibs maps `local` → localhost:6456). No fork code-bus, no CDN races.
+  # Gated preview hosts are served through the local authenticated proxy below.
   # own_hosts identifies Milo's OWN hosts (any '--milo--' host): those are served
   # by the local server directly instead — milolibs=local is a no-op on Milo's
   # own host, so serving locally is what shows the diff. This path needs the
@@ -64,8 +63,10 @@ local:
 # token; the allowlist path stays available via auth: on capture_hosts.
 capture_hosts:
   - '--milo--adobecom.aem.page'    # milo's own upstream previews
-  - host: '--da-dc--adobecom.aem.page'
+  - host: '--da-dc--adobecom.aem.page'    # DC consumer pages (MWPW-198935 class)
     proxy: { token_env: AEM_SITE_TOKEN_DA_DC }
+  # bacom consumer pages (MWPW-193755 class; pasted query params like
+  # country= survive the milolibs merge).
   - host: '--da-bacom--adobecom.aem.page'
     proxy: { token_env: AEM_SITE_TOKEN_DA_BACOM }
   - host: '--da-dc--adobecom.aem.live'     # pasted publish-host URLs
