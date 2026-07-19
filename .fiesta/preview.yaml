@@ -32,7 +32,6 @@ local:
   # ?milolibs=): keep the page REMOTE on its public content host and source THIS
   # branch's libs from the local dev server via milolibs=local (the consumer's
   # own setLibs maps `local` → localhost:6456). No fork code-bus, no CDN races.
-  # Gated preview hosts are served through the local authenticated proxy below.
   # own_hosts identifies Milo's OWN hosts (any '--milo--' host): those are served
   # by the local server directly instead — milolibs=local is a no-op on Milo's
   # own host, so serving locally is what shows the diff. This path needs the
@@ -40,11 +39,6 @@ local:
   consumer_overlay:
     own_hosts: ['--milo--']
     params: 'milolibs=local&martech=off'
-  # Gated consumer previews are served through a local authenticated proxy.
-  # The engine fills {port}; the token comes from the named env var.
-  proxy:
-    cmd: 'aem up --port={port} --no-open --no-livereload --stop-other --url=https://{host} --site-token={token}'
-    url: 'http://localhost:{port}{page}'
 
 # Hosts that carry Milo's pages when a requester pastes a URL in the ticket.
 # Milo ships as a library: real repro URLs usually live on CONSUMER sites that
@@ -58,17 +52,17 @@ local:
 # never .aem.live. The .live edge caches code per encoding variant for 2h
 # (vs 60s on .page), so a .live capture can photograph up-to-2h-stale code —
 # two MWPW-198935 runs blanked on exactly that (poisoned br variants). Pasted
-# .live URLs are swapped BACK to the preview host at capture time. da-dc /
-# da-bacom .page previews are proxied locally now, with an operator site
-# token; the allowlist path stays available via auth: on capture_hosts.
+# .live URLs are swapped BACK to the preview host at capture time. Gated
+# previews (da-dc / da-bacom) are captured on the real host now, with an
+# injected site-token header via auth: on capture_hosts.
 capture_hosts:
   - '--milo--adobecom.aem.page'    # milo's own upstream previews
   - host: '--da-dc--adobecom.aem.page'    # DC consumer pages (MWPW-198935 class)
-    proxy: { token_env: AEM_SITE_TOKEN_DA_DC }
+    auth: da-dc-token
   # bacom consumer pages (MWPW-193755 class; pasted query params like
   # country= survive the milolibs merge).
   - host: '--da-bacom--adobecom.aem.page'
-    proxy: { token_env: AEM_SITE_TOKEN_DA_BACOM }
+    auth: da-bacom-token
   - host: '--da-dc--adobecom.aem.live'     # pasted publish-host URLs
     capture_on: '--da-dc--adobecom.aem.page'
   - host: '--da-bacom--adobecom.aem.live'
@@ -84,6 +78,12 @@ capture_hosts:
 # (da-dc/da-bacom .aem.page) additionally need
 # login_url: https://admin.hlx.page/login/{org}/{site}/{ref} on the profile.
 auth_profiles:
+  da-dc-token:
+    token_env: AEM_SITE_TOKEN_DA_DC
+    header: 'authorization: token {token}'
+  da-bacom-token:
+    token_env: AEM_SITE_TOKEN_DA_BACOM
+    header: 'authorization: token {token}'
   ims:
     # The test account this profile signs in with. `username` is declared in
     # the clear — it is the identity a site admin must add to the da-dc /
