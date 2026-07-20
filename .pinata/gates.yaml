@@ -76,7 +76,7 @@ gates:
       Every changed libs/blocks/<name>/ must contain both <name>.js and
       <name>.css. Catches a block shipped with only one of the pair, which
       renders broken in production even when tests pass.
-    cmd: node .fiesta/scripts/check-block-structure.mjs {changed_files}
+    cmd: node .pinata/scripts/check-block-structure.mjs {changed_files}
     blocking: true
     failure_route: repair_loop
 
@@ -121,7 +121,7 @@ gates:
     description: >-
       An independent adversary (different model class, no producer context)
       reviews the diff and prior gate results before merge — required by the
-      acom org floor (snapshot in .fiesta/floor/). Skips honestly when no
+      acom org floor (snapshot in .pinata/floor/). Skips honestly when no
       adversary model is reachable in development.
     blocking: true
     # A genuine failure re-enters codegen for a bounded producer rebuild. The

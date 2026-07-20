@@ -1,4 +1,4 @@
-# `.fiesta/` — Milo's harness contract
+# `.pinata/` — Milo's harness contract
 
 This folder is how Milo drives the **fiesta** automation harness as a tenant. The
 harness reads these files at the pinned commit and holds no Milo-specific
@@ -27,7 +27,7 @@ that value at 5; Milo may lower it without an engine deployment.
   `test_globs: ["test/**/*.test.js"]` declaring its runnable domain. Fiesta
   derives affected entries inside that domain; neighboring Nala/Playwright
   suites are not compatible inputs to this gate.
-- **block-structure** — `node .fiesta/scripts/check-block-structure.mjs {changed_files}`:
+- **block-structure** — `node .pinata/scripts/check-block-structure.mjs {changed_files}`:
   every changed `libs/blocks/<name>/` must contain both `<name>.js` and `<name>.css`.
   This check used to be hardcoded in the harness; declaring it here lets the
   harness stay generic.
@@ -66,5 +66,5 @@ copied into each repo).
 Milo is onboarded once through this reusable contract. A normal Jira ticket—UI,
 JavaScript, CSS, tests, tooling, or another code defect—goes through Fiesta's
 default planner → codegen → verification → close pipeline without changing
-`.fiesta/`. A workflow file is only appropriate when Milo introduces a distinct
+`.pinata/`. A workflow file is only appropriate when Milo introduces a distinct
 request class such as a release chore or migration process.

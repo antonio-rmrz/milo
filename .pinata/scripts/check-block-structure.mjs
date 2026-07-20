@@ -6,7 +6,7 @@
 // re-declared in Milo's own repo so the harness stays generic.
 //
 // Usage (the harness substitutes the changed-file list for {changed_files}):
-//   node .fiesta/scripts/check-block-structure.mjs <path> <path> ...
+//   node .pinata/scripts/check-block-structure.mjs <path> <path> ...
 // With no changed block files, it passes (nothing to check).
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
