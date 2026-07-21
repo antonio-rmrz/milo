@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 import { expect } from '@esm-bundle/chai';
-import { setBackgroundFocus, decorateBlockText, getButtonType, decoratePictures } from '../../libs/utils/decorate.js';
+import { setBackgroundFocus, decorateBlockText, getButtonType, decoratePictures, handlePause } from '../../libs/utils/decorate.js';
 
 describe('setBackgroundFocus', () => {
   let container;
@@ -300,5 +300,63 @@ describe('decoratePictures', () => {
     expect(noSources.classList.contains('large-image-decorated')).to.be.false;
     expect(noImg.classList.contains('large-image-decorated')).to.be.false;
     expect(nanWidth.classList.contains('large-image-decorated')).to.be.false;
+  });
+});
+
+describe('handlePause — focus branch scrolls button into view', () => {
+  let container;
+  let video;
+  let wrapper;
+  let scrollCalls;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    container.innerHTML = `
+      <div class="video-holder">
+        <div class="video-container">
+          <video></video>
+          <a class="pause-play-wrapper" role="button" tabindex="0">
+            <div class="offset-filler"></div>
+          </a>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(container);
+    video = container.querySelector('video');
+    video.pause = () => {};
+    video.play = () => Promise.resolve();
+    Object.defineProperty(video, 'readyState', { configurable: true, get: () => 0 });
+    Object.defineProperty(video, 'paused', { configurable: true, get: () => true });
+    Object.defineProperty(video, 'ended', { configurable: true, get: () => false });
+
+    wrapper = container.querySelector('.pause-play-wrapper');
+    scrollCalls = [];
+    wrapper.scrollIntoView = (...args) => { scrollCalls.push(args); };
+  });
+
+  afterEach(() => {
+    container.remove();
+  });
+
+  it('calls scrollIntoView on the control when focus event fires', () => {
+    const event = new Event('focus');
+    Object.defineProperty(event, 'target', { value: wrapper });
+    handlePause(event);
+    expect(scrollCalls.length).to.equal(1);
+    expect(scrollCalls[0][0]).to.deep.equal({ block: 'nearest', inline: 'nearest' });
+  });
+
+  it('does not call scrollIntoView on click events', () => {
+    const event = new MouseEvent('click');
+    Object.defineProperty(event, 'target', { value: wrapper });
+    handlePause(event);
+    expect(scrollCalls.length).to.equal(0);
+  });
+
+  it('does not call scrollIntoView on blur events', () => {
+    const event = new Event('blur');
+    Object.defineProperty(event, 'target', { value: wrapper });
+    handlePause(event);
+    expect(scrollCalls.length).to.equal(0);
   });
 });
