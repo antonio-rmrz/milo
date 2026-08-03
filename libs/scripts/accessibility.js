@@ -38,15 +38,7 @@ function scrollTabFocusedElIntoView() {
   let isPadding = false;
   let isTab = false;
 
-  function scrollElement(target) {
-    if (!target) return;
-
-    if (isPadding) removeScrollPadding();
-    isTab = false;
-    isPadding = false;
-    isFocused = true;
-
-    const element = getActiveEl(target);
+  function checkAndScroll(element) {
     const rect = element.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
     const outsideViewport = rect.top < 0 || rect.bottom > viewportHeight;
@@ -75,6 +67,22 @@ function scrollTabFocusedElIntoView() {
     }
 
     element.scrollIntoView({ behavior: 'instant', block: 'center' });
+  }
+
+  function scrollElement(target) {
+    if (!target) return;
+
+    if (isPadding) removeScrollPadding();
+    isTab = false;
+    isPadding = false;
+    isFocused = true;
+
+    const element = getActiveEl(target);
+    if (window.lenis) {
+      requestAnimationFrame(() => requestAnimationFrame(() => checkAndScroll(element)));
+    } else {
+      checkAndScroll(element);
+    }
   }
 
   document.addEventListener('keydown', (e) => {
