@@ -74,16 +74,32 @@ capture_hosts:
 # end-to-end against auth.services.adobe.com with the harness automation
 # account. It is DORMANT until a capture_hosts entry attaches it via
 # `auth: ims` — do that only after the automation account (IMS_EMAIL) is
-# allowlisted for the site's preview access. helix site-auth hosts
-# (da-dc/da-bacom .aem.page) additionally need
-# login_url: https://admin.hlx.page/login/{org}/{site}/{ref} on the profile.
+# allowlisted for the site's preview access.
+#
+# The token profiles below name an env var, but NEVER set it by hand: it is the
+# slot the in-run mint writes to. A missing var and an expired one raise the same
+# AuthUnavailable and both route to the mint, so a pasted token buys nothing and
+# rots into a false pre-fire blocker. `mint: {login: ims}` is what makes the
+# token self-heal (mirrors mas/.pinata/preview.yaml, live-proven on da-cc).
+#
+# Do NOT add `login_url: https://admin.hlx.page/login/{org}/{site}/{ref}` to the
+# mint login, as an earlier note here advised — the engine rejects a fixed
+# login_url on a mint login ("would never navigate to the aem CLI's login
+# endpoint"). The mint drives the CLI's own loopback endpoint; `login_url` is
+# only for a gated capture whose app does not redirect to its IdP, and it must
+# carry the {url} placeholder.
 auth_profiles:
   da-dc-token:
     token_env: AEM_SITE_TOKEN_DA_DC
     header: 'authorization: token {token}'
+    # expired/missing token self-heals: the engine re-mints via the ims login in-run
+    mint:
+      login: ims
   da-bacom-token:
     token_env: AEM_SITE_TOKEN_DA_BACOM
     header: 'authorization: token {token}'
+    mint:
+      login: ims
   ims:
     # The test account this profile signs in with. `username` is declared in
     # the clear — it is the identity a site admin must add to the da-dc /
