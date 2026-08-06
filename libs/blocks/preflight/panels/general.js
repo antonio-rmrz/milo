@@ -29,6 +29,26 @@ const localizationResult = signal({ icon: 'purple', title: 'Links', description:
 const localizationIssues = signal([]);
 const localizationClosed = signal(false);
 
+export const generalBadge = signal({ errors: 0, warnings: 0 });
+
+const structureResultSignals = [
+  navResult,
+  footerResult,
+  regionSelectorResult,
+  georoutingResult,
+  breadcrumbsResult,
+];
+
+function updateGeneralBadge() {
+  generalBadge.value = {
+    errors: structureResultSignals.filter((s) => s.value.icon === 'red').length
+      + localizationIssues.value.length,
+    warnings: structureResultSignals.filter((s) => s.value.icon === 'orange').length,
+  };
+}
+
+[...structureResultSignals, localizationIssues].forEach((s) => s.subscribe(updateGeneralBadge));
+
 async function getStructureResults() {
   const signals = [
     navResult,

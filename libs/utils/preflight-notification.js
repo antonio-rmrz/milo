@@ -20,7 +20,7 @@ function getMasUnpublishedCount(results) {
 
 async function createPreflightNotification(masUnpublishedCount = 0) {
   const existingNotification = document.querySelector('.milo-preflight-overlay');
-  if (existingNotification) return;
+  if (existingNotification || document.getElementById('preflight')) return;
   const { miloLibs, codeRoot } = getConfig();
   const base = miloLibs || codeRoot;
   loadStyle(`${base}/styles/preflight-notification.css`);

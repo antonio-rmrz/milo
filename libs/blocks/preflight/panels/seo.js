@@ -70,6 +70,17 @@ const signals = [
   linksResult,
 ];
 
+export const seoBadge = signal({ errors: 0, warnings: 0 });
+
+function updateSeoBadge() {
+  seoBadge.value = {
+    errors: signals.filter((s) => s.value.icon === 'red').length,
+    warnings: signals.filter((s) => s.value.icon === 'orange').length,
+  };
+}
+
+signals.forEach((s) => s.subscribe(updateSeoBadge));
+
 function toUIFormat(result, signalResult) {
   let icon;
   if (result.status === STATUS.PASS) {

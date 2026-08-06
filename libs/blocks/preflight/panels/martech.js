@@ -7,7 +7,7 @@ const btnText = signal('Copy Table');
 
 function getTable(strings) {
   const table = document.createElement('table');
-  table.setAttribute('border', 1);
+  table.className = 'martech-table';
   const headerRow = document.createElement('tr');
   headerRow.append(createTag('th', { colspan: 2, style: 'width: 100%' }, 'martech metadata'));
   table.append(headerRow);
@@ -35,7 +35,6 @@ async function checkMartechMeta() {
 
 function copyTable() {
   try {
-    /* global ClipboardItem */
     const clipboardData = [new ClipboardItem({ 'text/html': new Blob([martechBlock.value], { type: 'text/html' }) })];
     navigator.clipboard.write(clipboardData);
     btnText.value = '✔ Copied!';
@@ -54,10 +53,12 @@ export default function Martech() {
   useEffect(() => { checkMartechMeta(); }, []);
 
   return html`
-  <div class="access-columns martech">
-    ${martechBlock.value && html`
-      <button class="preflight-action" onclick=${copyTable}>${btnText.value}</button>
-      <div dangerouslySetInnerHTML="${{ __html: martechBlock.value }}"></div>
-    `}
+  <div class="martech-panel">
+    ${martechBlock.value ? html`
+      <div class="martech-table-card">
+        <button class="preflight-action" onclick=${copyTable}>${btnText.value}</button>
+        <div class="martech-table-wrapper" dangerouslySetInnerHTML="${{ __html: martechBlock.value }}"></div>
+      </div>
+    ` : html`<p class="merch-empty">No martech metadata found on this page.</p>`}
   </div>`;
 }

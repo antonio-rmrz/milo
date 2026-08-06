@@ -13,21 +13,37 @@ const fragmentsResult = signal({ icon: 'purple', title: 'Fragments', description
 const personalizationResult = signal({ icon: 'purple', title: 'Personalization', description: 'Checking...' });
 const placeholdersResult = signal({ icon: 'purple', title: 'Placeholders', description: 'Checking...' });
 const iconsResult = signal({ icon: 'purple', title: 'Icons', description: 'Checking...' });
+const hasLcpElement = signal(true);
+
+const signals = [
+  lcpElResult,
+  singleBlockResult,
+  imageSizeResult,
+  videoPosterResult,
+  fragmentsResult,
+  personalizationResult,
+  placeholdersResult,
+  iconsResult,
+];
+
+export const performanceBadge = signal({ errors: 0, warnings: 0 });
+
+function updatePerformanceBadge() {
+  performanceBadge.value = {
+    errors: signals.filter((s) => s.value.icon === 'red').length,
+    warnings: signals.filter((s) => s.value.icon === 'orange').length,
+  };
+}
+
+signals.forEach((s) => s.subscribe(updatePerformanceBadge));
 
 /**
  * Runs performance checks and updates signals with the results.
  */
 async function getResults() {
-  const signals = [
-    lcpElResult,
-    singleBlockResult,
-    imageSizeResult,
-    videoPosterResult,
-    fragmentsResult,
-    personalizationResult,
-    placeholdersResult,
-    iconsResult,
-  ];
+  const lcp = await getLcpEntry(window.location.pathname, document);
+  hasLcpElement.value = !!lcp?.element;
+
   const checks = runChecks(window.location.pathname, document);
 
   const checkPromises = checks.map((resultOrPromise, index) => {
@@ -131,11 +147,13 @@ export default function Panel() {
         <${PerformanceItem} ...${iconsResult.value} />
       </div>
       <div>Unsure on how to get this page fully into the green? Check out the <a class="performance-guidelines" href="https://milo.adobe.com/docs/authoring/performance/" target="_blank">Milo Performance Guidelines</a>.</div>
-      <div> 
-        <span class="performance-element-preview" onMouseEnter=${highlightElement} onMouseLeave=${removeHighlight}>
-          Highlight the found LCP section
-        </span> 
-      </div>
+      ${hasLcpElement.value && html`
+        <div>
+          <span class="performance-element-preview" onMouseEnter=${highlightElement} onMouseLeave=${removeHighlight}>
+            Highlight the found LCP section
+          </span>
+        </div>
+      `}
       <div class="lcp-tooltip-modal"></div>
     </div>
   `;

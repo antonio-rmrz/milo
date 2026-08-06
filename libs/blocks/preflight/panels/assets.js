@@ -3,6 +3,8 @@ import { STATUS } from '../checks/constants.js';
 import { getPreflightResults } from '../checks/preflightApi.js';
 import { isViewportTooSmall } from '../checks/assets.js';
 
+const BACK_ICON = '<svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M11 3.5 5.5 9l5.5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
 // Define signals for check results and viewport status
 const assetDimensionsResult = signal({
   title: 'Asset Dimensions',
@@ -13,6 +15,44 @@ const assetsWithMatch = signal([]);
 const criticalAssetFailures = signal([]);
 const warningAssetFailures = signal([]);
 const viewportTooSmall = signal(isViewportTooSmall());
+
+export const assetsBadge = signal({ errors: 0, warnings: 0 });
+
+function updateAssetsBadge() {
+  assetsBadge.value = {
+    errors: criticalAssetFailures.value.length,
+    warnings: warningAssetFailures.value.length,
+  };
+}
+
+[criticalAssetFailures, warningAssetFailures].forEach((s) => s.subscribe(updateAssetsBadge));
+
+function closePreflight() {
+  document.getElementById('preflight')?.dispatchEvent(new Event('closeModal'));
+}
+
+function reopenPreflight() {
+  document.querySelector('.preflight-back-popover')?.remove();
+  const sidekick = document.querySelector('aem-sidekick, helix-sidekick');
+  sidekick?.dispatchEvent(new CustomEvent('custom:preflight', { bubbles: true }));
+}
+
+function showBackToPreflightPopover() {
+  document.querySelector('.preflight-back-popover')?.remove();
+  const popover = document.createElement('button');
+  popover.className = 'preflight-back-popover';
+  popover.type = 'button';
+  popover.innerHTML = `${BACK_ICON}<span>Back to Preflight</span>`;
+  popover.addEventListener('click', reopenPreflight);
+  document.body.append(popover);
+}
+
+function navigateToAsset(asset) {
+  if (!asset.asset) return;
+  closePreflight();
+  showBackToPreflightPopover();
+  asset.asset.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 
 /**
  * Runs asset checks and updates signals with the results.
@@ -86,7 +126,13 @@ function AssetGroup({ group }) {
     const itemClass = isAboveFoldWithMismatch ? 'assets-image-grid-item above-fold-critical' : 'assets-image-grid-item';
 
     return html`
-      <div class='${itemClass}' title='${isAboveFoldWithMismatch ? 'Above-the-fold asset with critical dimension issues' : ''}'>
+      <div
+        class='${itemClass}'
+        role="button"
+        tabindex="0"
+        title='${isAboveFoldWithMismatch ? 'Above-the-fold asset with critical dimension issues' : ''}'
+        onClick=${() => navigateToAsset(asset)}
+        onKeyDown=${(e) => (e.key === 'Enter' || e.key === ' ') && navigateToAsset(asset)}>
         ${asset.type === 'image' && html`<img src='${asset.src}' />`}
         ${asset.type === 'video' && html`<video controls src='${asset.src}' />`}
         ${asset.type === 'mpc' && html`<iframe src='${asset.src}' />`}
@@ -97,7 +143,7 @@ function AssetGroup({ group }) {
           ${asset.hasMismatch && html`<span>Recommended size: ${asset.recommendedDimensions}</span>`}
           <span>Type: ${asset.typeLabel}</span>
           ${asset.notes && html`<span><strong>Notes:</strong> ${asset.notes}</span>`}
-          ${isAboveFoldWithMismatch && html`<span class="above-fold-notice"><strong>⚠️ CRITICAL:</strong></span>`}
+          ${isAboveFoldWithMismatch && html`<span class="above-fold-notice"><strong>CRITICAL</strong></span>`}
         </div>
       </div>`;
   })}

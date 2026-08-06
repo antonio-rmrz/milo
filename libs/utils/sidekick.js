@@ -20,6 +20,8 @@ export default function init({ createTag, loadBlock, loadScript, loadStyle }) {
   };
 
   const preflightListener = async () => {
+    document.querySelector('.milo-preflight-overlay')?.remove();
+
     const preflight = createTag('div', { class: 'preflight' });
     const content = await loadBlock(preflight);
 

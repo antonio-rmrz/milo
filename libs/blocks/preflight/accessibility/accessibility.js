@@ -1,25 +1,39 @@
-import { html, useState, useEffect } from '../../../deps/htm-preact.js';
+import { html, signal, useState, useEffect } from '../../../deps/htm-preact.js';
 import { AXE_CORE_CONFIG } from './accessibility-config.js';
 import runAccessibilityTest from './accessibility-runner.js';
 import AuditImageAltText from './audit-image-alt-text.js';
+
+const testResultsSignal = signal(null);
+
+export const accessibilityBadge = signal({ errors: 0, warnings: 0 });
+
+function updateAccessibilityBadge() {
+  const violations = testResultsSignal.value?.violations || [];
+  accessibilityBadge.value = {
+    errors: violations.filter((v) => v.impact === 'critical' || v.impact === 'serious').length,
+    warnings: violations.filter((v) => v.impact === 'moderate' || v.impact === 'minor').length,
+  };
+}
+
+testResultsSignal.subscribe(updateAccessibilityBadge);
 
 /**
  * Preflight Accessibility Tab/Panel.
  */
 export default function Accessibility() {
   const [pageURL, setPageURL] = useState(window.location.href);
-  const [testResults, setTestResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [expandedViolations, setExpandedViolations] = useState([]);
+  const testResults = testResultsSignal.value;
 
   useEffect(() => {
     const runTest = async () => {
       setLoading(true);
-      setTestResults(null);
+      testResultsSignal.value = null;
       setExpandedViolations([]);
       setPageURL(window.location.href);
       const results = await runAccessibilityTest();
-      setTestResults(results);
+      testResultsSignal.value = results;
       setLoading(false);
     };
     runTest();
