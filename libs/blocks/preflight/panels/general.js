@@ -29,6 +29,24 @@ const localizationResult = signal({ icon: 'purple', title: 'Links', description:
 const localizationIssues = signal([]);
 const localizationClosed = signal(false);
 
+export const badge = signal({ errors: 0, warnings: 0 });
+
+function updateGeneralBadge() {
+  const results = [
+    navResult,
+    footerResult,
+    regionSelectorResult,
+    georoutingResult,
+    breadcrumbsResult,
+    localizationResult,
+  ];
+  badge.value = {
+    errors: results.filter((result) => result.value.icon === 'red').length
+      + localizationIssues.value.length,
+    warnings: results.filter((result) => result.value.icon === 'orange').length,
+  };
+}
+
 async function getStructureResults() {
   const signals = [
     navResult,
@@ -55,6 +73,8 @@ async function getStructureResults() {
         description: `Error: ${error.message}`,
       };
     })));
+
+  updateGeneralBadge();
 }
 
 async function getLocalizationResults() {
@@ -73,6 +93,8 @@ async function getLocalizationResults() {
       description: `Error: ${error.message}`,
     };
   }
+
+  updateGeneralBadge();
 }
 
 function getAdminUrl(url, type) {
