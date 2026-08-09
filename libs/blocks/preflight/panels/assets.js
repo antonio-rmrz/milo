@@ -1,7 +1,10 @@
 import { html, signal, useEffect } from '../../../deps/htm-preact.js';
+import { createTag } from '../../../utils/utils.js';
 import { STATUS } from '../checks/constants.js';
 import { getPreflightResults } from '../checks/preflightApi.js';
 import { isViewportTooSmall } from '../checks/assets.js';
+
+const BACK_POPOVER_CLASS = 'preflight-back-popover';
 
 // Define signals for check results and viewport status
 const assetDimensionsResult = signal({
@@ -13,6 +16,48 @@ const assetsWithMatch = signal([]);
 const criticalAssetFailures = signal([]);
 const warningAssetFailures = signal([]);
 const viewportTooSmall = signal(isViewportTooSmall());
+
+export const badge = signal({ errors: 0, warnings: 0 });
+
+/**
+ * Pins a control to the page that re-opens preflight after jumping to an asset.
+ */
+function showBackToPreflight() {
+  if (document.querySelector(`.${BACK_POPOVER_CLASS}`)) return;
+
+  const button = createTag('button', { type: 'button' }, 'Back to Preflight');
+  const popover = createTag('div', { class: BACK_POPOVER_CLASS }, button);
+
+  button.addEventListener('click', () => {
+    popover.remove();
+    document.querySelector('aem-sidekick, helix-sidekick')
+      ?.dispatchEvent(new CustomEvent('custom:preflight', { bubbles: true }));
+  });
+
+  document.body.append(popover);
+}
+
+/**
+ * Closes preflight and scrolls the page to the asset the author picked.
+ */
+function navigateToAsset(asset) {
+  if (!asset.asset) return;
+
+  document.querySelector('.dialog-modal#preflight')?.dispatchEvent(new Event('closeModal'));
+  asset.asset.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  showBackToPreflight();
+}
+
+function handleAssetClick(e, asset) {
+  if (e.target.closest('video, iframe')) return;
+  navigateToAsset(asset);
+}
+
+function handleAssetKeyDown(e, asset) {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  e.preventDefault();
+  navigateToAsset(asset);
+}
 
 /**
  * Runs asset checks and updates signals with the results.
@@ -46,6 +91,11 @@ async function getResults() {
     criticalAssetFailures.value = result.details.criticalAssetFailures || [];
     warningAssetFailures.value = result.details.warningAssetFailures || [];
   }
+
+  badge.value = {
+    errors: criticalAssetFailures.value.length,
+    warnings: warningAssetFailures.value.length,
+  };
 }
 
 /**
@@ -86,7 +136,12 @@ function AssetGroup({ group }) {
     const itemClass = isAboveFoldWithMismatch ? 'assets-image-grid-item above-fold-critical' : 'assets-image-grid-item';
 
     return html`
-      <div class='${itemClass}' title='${isAboveFoldWithMismatch ? 'Above-the-fold asset with critical dimension issues' : ''}'>
+      <div class='${itemClass}' title='${isAboveFoldWithMismatch ? 'Above-the-fold asset with critical dimension issues' : ''}'
+        role="button"
+        tabindex="0"
+        aria-label='${`Go to ${asset.typeLabel || asset.type} asset on the page`}'
+        onClick=${(e) => handleAssetClick(e, asset)}
+        onKeyDown=${(e) => handleAssetKeyDown(e, asset)}>
         ${asset.type === 'image' && html`<img src='${asset.src}' />`}
         ${asset.type === 'video' && html`<video controls src='${asset.src}' />`}
         ${asset.type === 'mpc' && html`<iframe src='${asset.src}' />`}
