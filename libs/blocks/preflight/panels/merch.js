@@ -6,6 +6,20 @@ const masFieldsMultipleFragmentWarnings = signal([]);
 const unpublishedFragments = signal([]);
 const loading = signal(true);
 
+export const badge = signal({ errors: 0, warnings: 0 });
+
+function updateMerchBadge() {
+  const elements = wcsElements.value;
+  const failed = elements.filter((elem) => elem.urlStatus === 'error'
+    || elem.promoCodeStatus === 'expired'
+    || elem.promoCodeStatus === 'not-found').length;
+  const undetermined = elements.filter((elem) => elem.urlStatus === 'undetermined').length;
+  badge.value = {
+    errors: failed + unpublishedFragments.value.length,
+    warnings: undetermined + masFieldsMultipleFragmentWarnings.value.length,
+  };
+}
+
 const MAS_UNPUBLISHED_HIGHLIGHT = 'preflight-mas-unpublished';
 
 const ALLOWED_MAS_HOSTS = ['mas.adobe.com'];
@@ -113,6 +127,8 @@ async function checkUnpublishedFragmentsForPanel() {
       location: firstCard ? getBlockLocation(firstCard) : 0,
     };
   });
+
+  updateMerchBadge();
 }
 
 function getService() {
@@ -263,6 +279,7 @@ async function checkWcsElements() {
 
   wcsElements.value = elements;
   loading.value = false;
+  updateMerchBadge();
 
   elements.forEach(async (elementData, index) => {
     if (elementData.href) {
@@ -277,6 +294,7 @@ async function checkWcsElements() {
       wcsElements.value[index].finalId = result.finalId;
       wcsElements.value[index].checking = false;
       wcsElements.value = [...wcsElements.value];
+      updateMerchBadge();
 
       if (result.status === 'error' || result.status === 'undetermined') {
         elementData.element.classList.add('preflight-merch-error');
@@ -329,11 +347,13 @@ async function checkWcsElements() {
             elementData.element.classList.add('preflight-merch-error');
           }
           wcsElements.value = [...wcsElements.value];
+          updateMerchBadge();
         } catch {
           wcsElements.value[index].promoCodeStatus = 'not-found';
           wcsElements.value[index].promoExpired = true;
           elementData.element.classList.add('preflight-merch-error');
           wcsElements.value = [...wcsElements.value];
+          updateMerchBadge();
         }
       }
     });

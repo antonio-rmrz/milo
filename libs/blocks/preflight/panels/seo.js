@@ -58,6 +58,8 @@ const asoSessionTrigger = signal(0);
 
 const isAsoSuite = signal(false);
 
+export const badge = signal({ errors: 0, warnings: 0 });
+
 let asoImsSignInInFlight = false;
 
 const signals = [
@@ -173,6 +175,11 @@ async function getResults() {
   });
 
   await Promise.all(checkPromises);
+
+  badge.value = {
+    errors: icons.filter((icon) => icon === 'red').length,
+    warnings: icons.filter((icon) => icon === 'orange').length,
+  };
 
   const red = icons.find((icon) => icon === 'red');
   if (!red) return;

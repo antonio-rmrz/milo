@@ -13,6 +13,9 @@ const fragmentsResult = signal({ icon: 'purple', title: 'Fragments', description
 const personalizationResult = signal({ icon: 'purple', title: 'Personalization', description: 'Checking...' });
 const placeholdersResult = signal({ icon: 'purple', title: 'Placeholders', description: 'Checking...' });
 const iconsResult = signal({ icon: 'purple', title: 'Icons', description: 'Checking...' });
+const hasLcp = signal(null);
+
+export const badge = signal({ errors: 0, warnings: 0 });
 
 /**
  * Runs performance checks and updates signals with the results.
@@ -51,6 +54,14 @@ async function getResults() {
   });
 
   await Promise.all(checkPromises);
+
+  badge.value = {
+    errors: signals.filter((result) => result.value.icon === 'red').length,
+    warnings: signals.filter((result) => result.value.icon === 'orange').length,
+  };
+
+  const lcp = await getLcpEntry(window.location.pathname, document).catch(() => null);
+  hasLcp.value = !!lcp;
 }
 
 /**
@@ -131,12 +142,14 @@ export default function Panel() {
         <${PerformanceItem} ...${iconsResult.value} />
       </div>
       <div>Unsure on how to get this page fully into the green? Check out the <a class="performance-guidelines" href="https://milo.adobe.com/docs/authoring/performance/" target="_blank">Milo Performance Guidelines</a>.</div>
-      <div> 
-        <span class="performance-element-preview" onMouseEnter=${highlightElement} onMouseLeave=${removeHighlight}>
-          Highlight the found LCP section
-        </span> 
-      </div>
-      <div class="lcp-tooltip-modal"></div>
+      ${hasLcp.value === true && html`
+        <div>
+          <span class="performance-element-preview" onMouseEnter=${highlightElement} onMouseLeave=${removeHighlight}>
+            Highlight the found LCP section
+          </span>
+        </div>
+        <div class="lcp-tooltip-modal"></div>
+      `}
     </div>
   `;
 }
