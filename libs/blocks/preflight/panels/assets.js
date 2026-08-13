@@ -3,20 +3,26 @@ import { STATUS } from '../checks/constants.js';
 import { getPreflightResults } from '../checks/preflightApi.js';
 import { isViewportTooSmall } from '../checks/assets.js';
 
-// Define signals for check results and viewport status
-const assetDimensionsResult = signal({
+// Module-level signals — reset on each mount to avoid stale data
+export const assetDimensionsResult = signal({
   title: 'Asset Dimensions',
   description: 'Checking...',
 });
-const assetsWithMismatch = signal([]);
-const assetsWithMatch = signal([]);
-const criticalAssetFailures = signal([]);
-const warningAssetFailures = signal([]);
-const viewportTooSmall = signal(isViewportTooSmall());
+export const assetsWithMismatch = signal([]);
+export const assetsWithMatch = signal([]);
+export const criticalAssetFailures = signal([]);
+export const warningAssetFailures = signal([]);
+export const viewportTooSmall = signal(isViewportTooSmall());
 
-/**
- * Runs asset checks and updates signals with the results.
- */
+function resetSignals() {
+  assetDimensionsResult.value = { title: 'Asset Dimensions', description: 'Checking...' };
+  assetsWithMismatch.value = [];
+  assetsWithMatch.value = [];
+  criticalAssetFailures.value = [];
+  warningAssetFailures.value = [];
+  viewportTooSmall.value = isViewportTooSmall();
+}
+
 async function getResults() {
   const results = await getPreflightResults({
     url: window.location.pathname,
@@ -25,7 +31,7 @@ async function getResults() {
     injectVisualMetadata: false,
   });
 
-  if (!results) return; // Page is excluded from preflight checks
+  if (!results) return;
 
   const checks = results.runChecks.assets || [];
 
@@ -48,22 +54,56 @@ async function getResults() {
   }
 }
 
-/**
- * Component to display a single asset check result.
- */
+function mountBackToPreflightPopover() {
+  if (document.querySelector('.back-to-preflight-popover')) return;
+  const btn = document.createElement('button');
+  btn.className = 'back-to-preflight-popover';
+  btn.textContent = 'Back to Preflight';
+  btn.addEventListener('click', () => {
+    btn.remove();
+    const sidekick = document.querySelector('aem-sidekick, helix-sidekick');
+    if (sidekick) {
+      sidekick.dispatchEvent(new CustomEvent('custom:preflight', { bubbles: true }));
+    }
+  });
+  document.body.appendChild(btn);
+}
+
+function navigateToAsset(asset) {
+  window.dispatchEvent(new CustomEvent('preflight:close'));
+  if (asset?.asset) {
+    asset.asset.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  mountBackToPreflightPopover();
+}
+
 function AssetsItem({ title, description }) {
   return html`
     <div class="assets-item">
-      <div class="assets-item-text">
-        <p class="assets-item-title">${title}</p>
-        <p class="assets-item-description">${description}</p>
+      <p class="assets-item-title">${title}</p>
+      <p class="assets-item-description">${description}</p>
+    </div>`;
+}
+
+function AssetRow({ asset, isCritical }) {
+  const itemClass = isCritical ? 'assets-image-grid-item above-fold-critical' : 'assets-image-grid-item';
+
+  return html`
+    <div
+      class=${itemClass}
+      title="Click to navigate to this asset"
+      onClick=${() => navigateToAsset(asset)}>
+      ${asset.type === 'image' && html`<img class="assets-thumbnail" src=${asset.src} alt="" />`}
+      ${asset.type !== 'image' && html`<div class="assets-thumbnail-placeholder">${asset.type}</div>`}
+      <div class="assets-image-grid-item-text">
+        <span>${asset.src?.split('/').pop() || asset.src}</span>
+        <span>Factor: ${asset.roundedFactor} | ${asset.naturalDimensions} → ${asset.displayDimensions}</span>
+        ${asset.hasMismatch && html`<span>Recommended: ${asset.recommendedDimensions}</span>`}
+        ${asset.typeLabel && html`<span>Type: ${asset.typeLabel}</span>`}
       </div>
     </div>`;
 }
 
-/**
- * Component to display a group of assets.
- */
 function AssetGroup({ group }) {
   const { title, assetArray } = group;
   const isCriticalGroup = title.includes('Critical');
@@ -74,48 +114,32 @@ function AssetGroup({ group }) {
     </div>
 
     ${viewportTooSmall.value && html`
-      <div class='assets-image-grid'>
-        <div class='assets-image-grid-item full-width'>Please resize your browser to at least 1200px width to run image checks</div>
+      <div class="assets-image-grid">
+        <div class="assets-image-grid-item full-width">Please resize your browser to at least 1200px width to run image checks</div>
       </div>
     `}
 
     ${!viewportTooSmall.value && assetArray.value.length > 0 && html`
-    <div class='assets-image-grid'>
-      ${assetArray.value.map((asset) => {
-    const isAboveFoldWithMismatch = isCriticalGroup;
-    const itemClass = isAboveFoldWithMismatch ? 'assets-image-grid-item above-fold-critical' : 'assets-image-grid-item';
-
-    return html`
-      <div class='${itemClass}' title='${isAboveFoldWithMismatch ? 'Above-the-fold asset with critical dimension issues' : ''}'>
-        ${asset.type === 'image' && html`<img src='${asset.src}' />`}
-        ${asset.type === 'video' && html`<video controls src='${asset.src}' />`}
-        ${asset.type === 'mpc' && html`<iframe src='${asset.src}' />`}
-        <div class='assets-image-grid-item-text'>
-          <span>Factor: ${asset.roundedFactor}</span>
-          <span>Upload size: ${asset.naturalDimensions}</span>
-          <span>Display size: ${asset.displayDimensions}</span>
-          ${asset.hasMismatch && html`<span>Recommended size: ${asset.recommendedDimensions}</span>`}
-          <span>Type: ${asset.typeLabel}</span>
-          ${asset.notes && html`<span><strong>Notes:</strong> ${asset.notes}</span>`}
-          ${isAboveFoldWithMismatch && html`<span class="above-fold-notice"><strong>⚠️ CRITICAL:</strong></span>`}
-        </div>
-      </div>`;
-  })}
-    </div>`}
+      <div class="assets-image-grid">
+        ${assetArray.value.map((asset) => html`
+          <${AssetRow} asset=${asset} isCritical=${isCriticalGroup} />
+        `)}
+      </div>
+    `}
 
     ${!viewportTooSmall.value && assetArray.value.length === 0 && html`
-      <div class='assets-image-grid'>
-        <div class='assets-image-grid-item full-width'>No assets found</div>
+      <div class="assets-image-grid">
+        <div class="assets-image-grid-item full-width">No assets found</div>
       </div>
     `}
   `;
 }
 
-/**
- * Main Panel Component
- */
 export default function Assets() {
   useEffect(() => {
+    // Reset signals to avoid stale data from a previous mount
+    resetSignals();
+
     let resizeTimeout;
 
     const handleResize = () => {
