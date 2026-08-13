@@ -4,7 +4,6 @@ import { STATUS_TO_ICON_MAP } from '../checks/constants.js';
 
 const { getLcpEntry, runChecks } = preflightApi.performance;
 
-// Define signals for each performance check result
 const lcpElResult = signal({ icon: 'purple', title: 'Valid LCP', description: 'Checking...' });
 const singleBlockResult = signal({ icon: 'purple', title: 'Single Block', description: 'Checking...' });
 const imageSizeResult = signal({ icon: 'purple', title: 'Images size', description: 'Checking...' });
@@ -14,9 +13,9 @@ const personalizationResult = signal({ icon: 'purple', title: 'Personalization',
 const placeholdersResult = signal({ icon: 'purple', title: 'Placeholders', description: 'Checking...' });
 const iconsResult = signal({ icon: 'purple', title: 'Icons', description: 'Checking...' });
 
-/**
- * Runs performance checks and updates signals with the results.
- */
+// null = unknown (still checking), false = no LCP element, true = has LCP element
+export const hasLcpElement = signal(null);
+
 async function getResults() {
   const signals = [
     lcpElResult,
@@ -51,11 +50,12 @@ async function getResults() {
   });
 
   await Promise.all(checkPromises);
+
+  // Determine if an LCP element was found
+  const lcp = await getLcpEntry(window.location.pathname, document).catch(() => null);
+  hasLcpElement.value = !!(lcp?.element);
 }
 
-/**
- * Component to display a single performance check result.
- */
 function PerformanceItem({ icon, title, description }) {
   return html`
     <div class="preflight-item">
@@ -67,9 +67,6 @@ function PerformanceItem({ icon, title, description }) {
     </div>`;
 }
 
-/**
- * LCP Highlighting Functionality
- */
 let clonedLcpSection;
 async function highlightElement(event) {
   const lcp = await getLcpEntry(window.location.pathname, document);
@@ -108,9 +105,6 @@ const removeHighlight = () => {
   document.querySelector('.lcp-tooltip-modal').classList.remove('show');
 };
 
-/**
- * Main Panel Component
- */
 export default function Panel() {
   useEffect(() => {
     getResults();
@@ -131,11 +125,13 @@ export default function Panel() {
         <${PerformanceItem} ...${iconsResult.value} />
       </div>
       <div>Unsure on how to get this page fully into the green? Check out the <a class="performance-guidelines" href="https://milo.adobe.com/docs/authoring/performance/" target="_blank">Milo Performance Guidelines</a>.</div>
-      <div> 
-        <span class="performance-element-preview" onMouseEnter=${highlightElement} onMouseLeave=${removeHighlight}>
-          Highlight the found LCP section
-        </span> 
-      </div>
+      ${hasLcpElement.value !== false && html`
+        <div>
+          <span class="performance-element-preview" onMouseEnter=${highlightElement} onMouseLeave=${removeHighlight}>
+            Highlight the found LCP section
+          </span>
+        </div>
+      `}
       <div class="lcp-tooltip-modal"></div>
     </div>
   `;

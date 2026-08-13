@@ -35,12 +35,11 @@ async function checkMartechMeta() {
 
 function copyTable() {
   try {
-    /* global ClipboardItem */
     const clipboardData = [new ClipboardItem({ 'text/html': new Blob([martechBlock.value], { type: 'text/html' }) })];
     navigator.clipboard.write(clipboardData);
-    btnText.value = '✔ Copied!';
+    btnText.value = 'Copied!';
   } catch (e) {
-    btnText.value = 'ⓧ Error Copying';
+    btnText.value = 'Error Copying';
     /* eslint-disable-next-line no-console */
     console.error(e);
   }
@@ -54,10 +53,10 @@ export default function Martech() {
   useEffect(() => { checkMartechMeta(); }, []);
 
   return html`
-  <div class="access-columns martech">
-    ${martechBlock.value && html`
-      <button class="preflight-action" onclick=${copyTable}>${btnText.value}</button>
-      <div dangerouslySetInnerHTML="${{ __html: martechBlock.value }}"></div>
-    `}
-  </div>`;
+    <div class="martech-panel martech">
+      ${martechBlock.value && html`
+        <button class="preflight-action" onclick=${copyTable}>${btnText.value}</button>
+        <div dangerouslySetInnerHTML="${{ __html: martechBlock.value }}"></div>
+      `}
+    </div>`;
 }
