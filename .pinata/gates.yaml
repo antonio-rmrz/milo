@@ -52,6 +52,7 @@ gates:
     cmd: npx stylelint {css_files}
     blocking: true
     failure_route: repair_loop
+    max_repair_attempts: 3
     repair:
       cmd: npx stylelint {css_files} --fix
 
