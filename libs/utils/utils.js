@@ -210,7 +210,7 @@ const TARGET_TIMEOUT_MS = 4000;
 
 const LANGSTORE = 'langstore';
 const PREVIEW = 'target-preview';
-const PAGE_URL = new URL(window.location.href);
+export const PAGE_URL = new URL(window.location.href);
 // TODO remove LANGUAGE_BASED_PATHS once news.adobe.com is using new langFirst site structure
 const LANGUAGE_BASED_PATHS = [
   // don't add milo too. It's a special case because of tools, merch, etc.
@@ -967,9 +967,10 @@ function setCountry() {
 export async function getCountry(skipFallback = false) {
   if (isBot()) return null;
 
-  const rawAkamai = PAGE_URL.searchParams.get('akamaiLocale');
-  const akamaiLocale = /^[a-zA-Z]{2,6}$/.test(rawAkamai) ? rawAkamai : null;
-  const country = akamaiLocale || sessionStorage.getItem('akamai');
+  const validate = (v) => (/^[a-zA-Z]{2,6}$/.test(v) ? v : null);
+  const country = validate(PAGE_URL.searchParams.get('country'))
+    || validate(PAGE_URL.searchParams.get('akamaiLocale'))
+    || sessionStorage.getItem('akamai');
   if (country || skipFallback) return country?.toLowerCase();
 
   try {
