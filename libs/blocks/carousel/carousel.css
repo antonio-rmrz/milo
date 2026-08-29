@@ -125,6 +125,12 @@
   background-color: var(--carousel-nav-button-background-active-focus);
 }
 
+.carousel .pause-play-wrapper:focus,
+.carousel .play-pause-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--carousel-nav-button-background-focus);
+}
+
 .dark .carousel .carousel-previous,
 .dark .carousel .carousel-next,
 .carousel.dark .carousel-previous,
@@ -145,22 +151,22 @@
 }
 
 /* Disable-buttons: disabled state and pointer-events for all viewports */
+.carousel.disable-circular-nav .carousel-button.disabled,
+.carousel.dark.disable-circular-nav .carousel-button.disabled,
+.dark .carousel.disable-circular-nav .carousel-button.disabled,
+.carousel.disable-circular-nav .carousel-button.disabled:hover,
+.carousel.disable-circular-nav .carousel-button.disabled:active,
 .carousel.dark.disable-circular-nav .carousel-button.disabled:hover,
 .carousel.dark.disable-circular-nav .carousel-button.disabled:active,
 .dark .carousel.disable-circular-nav .carousel-button.disabled:hover,
-.dark .carousel.disable-circular-nav .carousel-button.disabled:active,
-.carousel.disable-circular-nav .carousel-button.disabled:hover,
-.carousel.disable-circular-nav .carousel-button.disabled:active,
-.carousel.dark.disable-circular-nav .carousel-button.disabled,
-.dark .carousel.disable-circular-nav .carousel-button.disabled,
-.carousel.disable-circular-nav .carousel-button.disabled {
+.dark .carousel.disable-circular-nav .carousel-button.disabled:active {
   background-color: var(--carousel-nav-background-dark);
   pointer-events: none;
 }
 
-.dark .carousel.disable-circular-nav .carousel-button.disabled path,
+.carousel.disable-circular-nav .carousel-button.disabled path,
 .carousel.dark.disable-circular-nav .carousel-button.disabled path,
-.carousel.disable-circular-nav .carousel-button.disabled path {
+.dark .carousel.disable-circular-nav .carousel-button.disabled path {
   fill: var(--carousel-nav-button-background-active-focus);
 }
 
@@ -186,13 +192,17 @@ html[dir="rtl"] .carousel .carousel-previous {
   will-change: transform;
 }
 
+html[dir="rtl"] .carousel-slides {
+  flex-direction: row-reverse;
+}
+
+.carousel.lightbox-active .carousel-slides {
+  width: 100%;
+}
+
 .carousel.container.align-height .carousel-slides,
 .carousel.container.disable-buttons .carousel-slides {
   align-items: stretch;
-}
-
-html[dir="rtl"] .carousel-slides {
-  flex-direction: row-reverse;
 }
 
 .carousel-slides.is-reversing {
@@ -336,7 +346,6 @@ html[dir="rtl"] .carousel .move-indicators {
 
 .carousel-curtain {
   content: '';
-  -webkit-backdrop-filter: blur(0.25em);
   backdrop-filter: blur(0.25em);
   background:rgb(255 255 255 / 90%);
   width: 100%;
@@ -349,10 +358,6 @@ html[dir="rtl"] .carousel .move-indicators {
 
 .dark .carousel-curtain {
   background:rgb(0 0 0 / 90%);
-}
-
-.carousel.lightbox-active .carousel-slides {
-  width: 100%;
 }
 
 .carousel.lightbox .lightbox-button {
@@ -433,7 +438,13 @@ html[dir="rtl"] .carousel .move-indicators {
 }
 
 .carousel.lightbox .carousel-close:focus-visible {
-  outline: 2px solid var(--modal-focus-color);
+  outline: none;
+}
+
+.carousel.lightbox .carousel-close:focus-visible > svg {
+  border-radius: 50%;
+  border: 2px solid var(--carousel-focus-color);
+  padding: 3px;
 }
 
 .carousel.lightbox .carousel-close:focus-visible circle {
@@ -442,16 +453,6 @@ html[dir="rtl"] .carousel .move-indicators {
 
 .carousel.lightbox .carousel-close:focus-visible line {
   stroke: var(--modal-close-accent-color);
-}
-
-.carousel.lightbox .carousel-close:focus-visible {
-  outline: none;
-}
-
-.carousel.lightbox .carousel-close:focus-visible > svg {
-  border-radius: 50%;
-  border: 2px solid var(--carousel-focus-color);
-  padding: 3px;
 }
 
 .carousel.lightbox.lightbox-active .lightbox-button {
@@ -475,24 +476,6 @@ html[dir="rtl"] .carousel .move-indicators {
 .carousel.container .carousel-slide .foreground:not(.icon-block .foreground) {
   max-width: unset;
   margin: unset;
-}
-
-.carousel.container.align-height .carousel-slide div:not(.editorial-card) .foreground:not(.icon-block .foreground) {
-  height: 100%;
-}
-
-.carousel.container.align-height .carousel-slide > div:not(.media) .foreground > div {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.carousel.container.align-height .foreground > div:not(.brick-text) > *:not(.cta-container) {
-  margin-top: 0;
-}
-
-.carousel.container.align-height .cta-container {
-  margin-top: auto;
 }
 
 .carousel.container .carousel-slide .container {
@@ -568,25 +551,43 @@ html[dir="rtl"] .carousel .move-indicators {
 .carousel.container .carousel-slide .xxxl-spacing { padding: var(--spacing-xxxl); }
 
 .carousel.container.align-height .carousel-slide.xs-spacing > div,
-.carousel.container.align-height .carousel-slide .xs-spacing { height: calc(100% - 2*var(--spacing-xs)); }
+.carousel.container.align-height .carousel-slide .xs-spacing { height: calc(100% - 2 * var(--spacing-xs)); }
 
 .carousel.container.align-height .carousel-slide.s-spacing > div,
-.carousel.container.align-height .carousel-slide .s-spacing { height: calc(100% - 2*var(--spacing-s)); }
+.carousel.container.align-height .carousel-slide .s-spacing { height: calc(100% - 2 * var(--spacing-s)); }
 
 .carousel.container.align-height .carousel-slide.m-spacing > div,
-.carousel.container.align-height .carousel-slide .m-spacing { height: calc(100% - 2*var(--spacing-m)); }
+.carousel.container.align-height .carousel-slide .m-spacing { height: calc(100% - 2 * var(--spacing-m)); }
 
 .carousel.container.align-height .carousel-slide.l-spacing > div,
-.carousel.container.align-height .carousel-slide .l-spacing { height: calc(100% - 2*var(--spacing-l)); }
+.carousel.container.align-height .carousel-slide .l-spacing { height: calc(100% - 2 * var(--spacing-l)); }
 
 .carousel.container.align-height .carousel-slide.xl-spacing > div,
-.carousel.container.align-height .carousel-slide .xl-spacing { height: calc(100% - 2*var(--spacing-xl)); }
+.carousel.container.align-height .carousel-slide .xl-spacing { height: calc(100% - 2 * var(--spacing-xl)); }
 
 .carousel.container.align-height .carousel-slide.xxl-spacing > div,
-.carousel.container.align-height .carousel-slide .xxl-spacing { height: calc(100% - 2*var(--spacing-xxl)); }
+.carousel.container.align-height .carousel-slide .xxl-spacing { height: calc(100% - 2 * var(--spacing-xxl)); }
 
 .carousel.container.align-height .carousel-slide.xxxl-spacing > div,
-.carousel.container.align-height .carousel-slide .xxxl-spacing { height: calc(100% - 2*var(--spacing-xxxl)); }
+.carousel.container.align-height .carousel-slide .xxxl-spacing { height: calc(100% - 2 * var(--spacing-xxxl)); }
+
+.carousel.container.align-height .carousel-slide div:not(.editorial-card) .foreground:not(.icon-block .foreground) {
+  height: 100%;
+}
+
+.carousel.container.align-height .carousel-slide > div:not(.media) .foreground > div {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.carousel.container.align-height .foreground > div:not(.brick-text) > *:not(.cta-container) {
+  margin-top: 0;
+}
+
+.carousel.container.align-height .cta-container {
+  margin-top: auto;
+}
 
 .carousel.fade .carousel-slide {
   opacity: .3;
@@ -633,22 +634,22 @@ html[dir="rtl"] .carousel .move-indicators {
     transform: translateX(65%);
   }
 
+  .carousel.disable-buttons .carousel-button.disabled,
+  .carousel.dark.disable-buttons .carousel-button.disabled,
+  .dark .carousel.disable-buttons .carousel-button.disabled,
+  .carousel.disable-buttons .carousel-button.disabled:hover,
+  .carousel.disable-buttons .carousel-button.disabled:active,
   .carousel.dark.disable-buttons .carousel-button.disabled:hover,
   .carousel.dark.disable-buttons .carousel-button.disabled:active,
   .dark .carousel.disable-buttons .carousel-button.disabled:hover,
-  .dark .carousel.disable-buttons .carousel-button.disabled:active,
-  .carousel.disable-buttons .carousel-button.disabled:hover,
-  .carousel.disable-buttons .carousel-button.disabled:active,
-  .carousel.dark.disable-buttons .carousel-button.disabled,
-  .dark .carousel.disable-buttons .carousel-button.disabled,
-  .carousel.disable-buttons .carousel-button.disabled {
+  .dark .carousel.disable-buttons .carousel-button.disabled:active {
     background-color: var(--carousel-nav-background-dark);
     cursor: not-allowed;
   }
 
-  .dark .carousel.disable-buttons .carousel-button.disabled path,
+  .carousel.disable-buttons .carousel-button.disabled path,
   .carousel.dark.disable-buttons .carousel-button.disabled path,
-  .carousel.disable-buttons .carousel-button.disabled path {
+  .dark .carousel.disable-buttons .carousel-button.disabled path {
     fill: var(--carousel-nav-button-background-active-focus);
   }
 
@@ -887,8 +888,7 @@ html[dir="rtl"] .carousel .move-indicators {
   }
 
   .carousel[class*='show-'].ups-desktop:has(.editorial-card) .carousel-slides.is-ready {
-    flex-wrap: wrap;
-    flex-direction: row;
+    flex-flow: row wrap;
     align-items: stretch;
     transform: none;
     left: initial;
@@ -914,10 +914,8 @@ html[dir="rtl"] .carousel .move-indicators {
   overflow: hidden;
 }
 
-:root:has(meta[name="theme"][content="max25"]) {
-  @media (min-width: 900px) {
-    .carousel.show-2.ups-desktop.m-gap .carousel-slides {
-      gap: 44px var(--spacing-s);
-    }
+@media (min-width: 900px) {
+  :root:has(meta[name="theme"][content="max25"]) .carousel.show-2.ups-desktop.m-gap .carousel-slides {
+    gap: 44px var(--spacing-s);
   }
 }

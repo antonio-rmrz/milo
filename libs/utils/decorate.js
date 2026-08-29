@@ -374,6 +374,9 @@ export function handlePause(event) {
   event.stopPropagation();
   const video = event.target.closest('.video-holder').parentElement.querySelector('video');
   const isManualToggle = event.type === 'click' || event.code === 'Enter' || event.code === 'Space';
+  if (event.type === 'focus') {
+    event.target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
   if (event.type === 'blur') {
     video.pause();
   } else if (video.paused || video.ended || event.type === 'focus') {
